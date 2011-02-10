@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addoninfo>
+    <!-- (required) guuid: unique identifier of this addon
+    guuids can be generated online at sites such as http://www.famkruithof.net/uuid/uuidgen -->
+    <guid>da775ee0-b361-11df-94e2-0800200c9a66</guid>
+
+    <!-- (required) type:
+    1:  visualization
+    2:  skin
+    3:  pvrdll
+    4:  script
+    5:  scraper
+    6:  screensaver
+    7:  plugin-pvr
+    8:  plugin-video
+    9:  plugin-music
+    10: plugin-program
+    11: plugin-pictures
+    12: plugin-weather -->
+    <type>8</type>
+
+    <!-- (required) Title -->
+    <title>Icefilms</title>
+
+    <!-- (required) Major.minor.build -->
+    <version>1.0.0</version>
+
+    <!-- (required) author name & email.  at least one author name is required -->
+    <authors>
+        <author name="anarchintosh" email="j48antialias@gmail.com" />
+        <author name="daledude" email="daledude@gmail.com" />
+    </authors>
+
+    <!-- (required) Short description of addon. -->
+    <summary>Icefilms.info Plugin</summary>
+
+    <!-- Longer descrption of addon.  Usage instructions should go here if required. -->
+    <description>This XBMC plugin enables streaming scene releases from the megaupload links listed on Icefilms.info</description>
+
+    <!-- user defined tags e.g. <tags><tag>Example</tag></tags> -->
+    <tags>
+        <tag></tag>
+    </tags>
+
+    <!-- minimum revision of xbmc your addon will run on.  Leave blank all revisions-->
+    <minrevision>r30366</minrevision>
+
+    <!--platforms compatible with your addon.   xbox, osx, windows, linux, or all -->
+    <platforms>
+        <platform>all</platform>
+    </platforms>
+
+    <!--list any dependancies (such as another addon,  your addon may have.  minversion and maxversion are optional-->
+    <dependencies>
+        <dependency minversion="" maxversion=""></dependency>
+    </dependencies>
+
+    <!-- (optional) Whatever is put in disclaimer will be shown before download in an ok/cancel dialog.
+    Keep it short and to the point. -->
+    <disclaimer>The author is not to be held liable for any copyrights that megaupload or 2shared may have infringed on</disclaimer>
+
+    <!-- (optional) The License the addon is released under.-->
+    <license>GPL</license>
+</addoninfo>

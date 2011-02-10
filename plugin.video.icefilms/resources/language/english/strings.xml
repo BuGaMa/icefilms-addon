@@ -1,0 +1,22 @@
+<strings>
+    <!-- MENUS -->
+    <string id="30100">Hide homepage</string>
+    <string id="30101">Enable MetaData</string>
+    <string id="30102">Flatten TV Shows with single seasons</string>
+    <string id="30103">Flatten source type for single type videos</string>
+    <string id="30104">Hide 2Shared sources</string>
+    <string id="30105">Autoplay next part of source when streaming</string>
+
+
+    <!-- MEGAUPLOAD -->
+    <string id="30200">Use Megaupload account</string>
+    <string id="30201">    Username</string>
+    <string id="30202">    Password</string>
+    <string id="30203">    Hide successful login notifications</string>
+    <string id="30204">Use Megavideo if possible (Low Quality)</string> 
+
+    <!-- DOWNLOADS -->
+    <string id="30300">Downloads folder:</string>
+    <string id="30301">Create directory structures in downloads folder</string>
+    <string id="30302">Delete incomplete downloads</string>
+</strings>
