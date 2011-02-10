@@ -4,16 +4,13 @@ script.module.mechanize
 These should be installed automatically when stable release is installed from googlecode repository.
 You can also get them from http://code.google.com/p/anarchintosh-projects/downloads/list
 
-to test the dev versions, get the first metadata container from: 
-http://www.megaupload.com/?d=PNE0TNPF
-
-unzip it and put meta_caches in the userdata/addons/plugin.video.icefilms folder.
-
 This repo should only ever contain stable versions of the megaroutines script.
 Use the link below for megaroutines dev:
 https://github.com/icefilms-xbmc/megaroutines
 
 
-v1.0.0 has been finalised, but there is the weird error that is produced after the meta containers are installed.
-error is possibly due to file permissions?
+v1.0.0 has been finalised. Metacontainers and metacontainer handlers have been fully updated and tested.
+It will now self-install the metacontainers when first run.
+However, there is the weird error that is produced after the meta containers are installed.
+Is the error is possibly due to file permissions?
 
