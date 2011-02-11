@@ -29,7 +29,7 @@ import sys
 import urllib
 import urllib2
 import cStringIO
-
+import string
 import shutil
 import clean_dirs
 

@@ -405,10 +405,10 @@ def FAVOURITES(url):
 
                               splitter=re.split('\|+', filecontents)
                               name=splitter[0]
-                              turl=splitter[1]
+                              url=splitter[1]
                               mode=int(splitter[2])
 
-                              addDir(name,turl,mode,'',delfromfav=True)
+                              addDir(name,url,mode,'',delfromfav=True)
                          except:
                                    print 'problem adding a tv favourites item'
                          
@@ -430,12 +430,12 @@ def FAVOURITES(url):
 
                                    splitter=re.split('\|+', filecontents)
                                    name=splitter[0]
-                                   turl=splitter[1]
+                                   url=splitter[1]
                                    mode=int(splitter[2])
                                    imdb_id=splitter[3]
                               
                                    #don't add with meta
-                                   addDir(name,turl,mode,'',delfromfav=True)
+                                   addDir(name,url,mode,'',delfromfav=True)
                               except:
                                    print 'problem adding a movie favourites item'
 
@@ -453,7 +453,7 @@ def FAVOURITES(url):
                                    splitter=re.split('\|+', filecontents)
 
                                    name=splitter[0]
-                                   turl=splitter[1]
+                                   url=splitter[1]
                                    mode=int(splitter[2])
                                    imdb_id=splitter[3]
 
@@ -462,7 +462,7 @@ def FAVOURITES(url):
 
                                    if meta is None:
                                         #add directories without meta
-                                        addDir(name,turl,mode,'',delfromfav=True)
+                                        addDir(name,url,mode,'',delfromfav=True)
 
                                    if meta is not None:
                                         #add directories with meta
@@ -1689,6 +1689,7 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
 
     # add/delete favourite
     if disablefav==False: # disable fav is necessary for the scrapes in the homepage category.
+                
         if delfromfav is True:
             #settings for when in the Favourites folder
             contextMenuItems.append(('Delete from Ice Favourites', 'XBMC.RunPlugin(%s?mode=111&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
@@ -1696,10 +1697,12 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
             #if directory is an episode list or movie
             if mode == 100 or mode == 12:
                 if imdb is not False:
-                    sysimdb = urllib.quote_plus(imdb)
+                    sysimdb = urllib.quote_plus(str(imdb))
+                    
                 else:
                     #if no imdb number, it will have no metadata in Favourites
                     sysimdb = urllib.quote_plus('nothing')
+
                 contextMenuItems.append(('Add to Ice Favourites', 'XBMC.RunPlugin(%s?mode=110&name=%s&url=%s&imdbnum=%s)' % (sys.argv[0], sysname, sysurl, sysimdb)))
 
     # switch on/off library mode (have it appear in list after favourite options)
