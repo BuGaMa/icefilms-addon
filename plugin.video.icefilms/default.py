@@ -481,20 +481,26 @@ def URL_TYPE(url):
                return 'episodes'     
 
 def METAFIXER(url):
-     #Icefilms urls passed to me will have their imdb numbers returned.
+     #Icefilms urls passed to me will have their proper names and imdb numbers returned.
      source=GetURL(url)
 
      url_type=URL_TYPE(url)
 
+     #get proper name from the page. (in case it is a weird name)
+     
      if url_type=='mirrors':
                #Movie
+               name=re.compile('''<span style="font-size:large;color:white;">(.+?)</span>''').findall(source)
                match=re.compile('<a class=iframe href=http://www.imdb.com/title/(.+?)/ ').findall(source)
-               return match[0]
+               name=CLEANUP(name[0])
+               return name,match[0]
 
      elif url_type=='episodes':
                #TV
+               name=re.compile('<h1>(.+?)<a class').findall(source)
                match=re.compile('href="http://www.imdb.com/title/(.+?)/"').findall(source)
-               return match[0]
+               name=CLEANUP(name[0])
+               return name,match[0]
      
      
 def ADD_TO_FAVOURITES(name,url,imdbnum):
@@ -516,8 +522,6 @@ def ADD_TO_FAVOURITES(name,url,imdbnum):
           except:
                pass
 
-          print 'NAME:',name,'URL:',url,'IMDB NUMBER:',imdbnum
-
           #Check what kind of url it is and set themode and savepath (helpful for metadata) accordingly
           url_type=URL_TYPE(url)
 
@@ -525,13 +529,19 @@ def ADD_TO_FAVOURITES(name,url,imdbnum):
                themode='100'
                savepath=moviefav
                
-               #currently only run metafixer on non-tv pages.
-               if imdbnum == 'nothing':
-                    imdbnum=METAFIXER(url)
+               
 
           elif url_type=='episodes':
                themode='12'
                savepath=tvfav
+
+          #fix name and imdb number for Episode List entries in Search.
+          if imdbnum == 'nothing':
+               metafix=METAFIXER(url)
+               name=metafix[0]
+               imdbnum=metafix[1]
+
+          print 'NAME:',name,'URL:',url,'IMDB NUMBER:',imdbnum
 
           #Delete HD 720p entry from filename. using name as filename makes favourites appear alphabetically.
           adjustedname=re.sub(' \*HD 720p\*','', name)
