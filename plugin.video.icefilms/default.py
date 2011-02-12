@@ -489,9 +489,24 @@ def METAFIXER(url):
      #get proper name from the page. (in case it is a weird name)
      
      if url_type=='mirrors':
-               #Movie
-               name=re.compile('''<span style="font-size:large;color:white;">(.+?)</span>''').findall(source)
-               match=re.compile('<a class=iframe href=http://www.imdb.com/title/(.+?)/ ').findall(source)
+               #get imdb number.
+               match=re.compile('<a class=iframe href=http://www.imdb.com/title/(.+?)/ ').findall(source)      
+
+               #check if it is an episode. 
+               epcheck=re.search('<a href=/tv/series/',source)
+
+               #if it is, return the proper series name as opposed to the mirror page name.
+               if epcheck is not None:
+                    tvget=re.compile('<a href=/tv/series/(.+?)>').findall(source)
+                    tvurl=iceurl+'tv/series/'+str(tvget[0])
+                    #load ep page and get name from that. sorry icefilms bandwidth!
+                    tvsource=GetURL(tvurl)
+                    name=re.compile('<h1>(.+?)<a class').findall(tvsource)
+
+               #return mirror page name.
+               if epcheck is None:
+                    name=re.compile('''<span style="font-size:large;color:white;">(.+?)</span>''').findall(source)
+                    
                name=CLEANUP(name[0])
                return name,match[0]
 
@@ -523,23 +538,24 @@ def ADD_TO_FAVOURITES(name,url,imdbnum):
                pass
 
           #Check what kind of url it is and set themode and savepath (helpful for metadata) accordingly
-          url_type=URL_TYPE(url)
-
-          if url_type=='mirrors':
-               themode='100'
-               savepath=moviefav
-               
-               
-
-          elif url_type=='episodes':
-               themode='12'
-               savepath=tvfav
+          
 
           #fix name and imdb number for Episode List entries in Search.
           if imdbnum == 'nothing':
                metafix=METAFIXER(url)
                name=metafix[0]
                imdbnum=metafix[1]
+
+          
+          url_type=URL_TYPE(url)
+
+          if url_type=='mirrors':
+               themode='100'
+               savepath=moviefav
+               
+          elif url_type=='episodes':
+               themode='12'
+               savepath=tvfav
 
           print 'NAME:',name,'URL:',url,'IMDB NUMBER:',imdbnum
 
@@ -553,6 +569,8 @@ def ADD_TO_FAVOURITES(name,url,imdbnum):
                #Use | as separators that can be used by re.split when reading favourites folder.
                favcontents=name+'|'+url+'|'+themode+'|'+imdbnum
                save(NewFavFile,favcontents)
+          else:
+               print 'favourite already exists'
 
      else:
           print 'name or url is none:'
