@@ -451,9 +451,9 @@ class MovieMetaData:
 
         #Clean some unicode stuff
         try:
-            meta['plot']=cleanUnicode(meta['plot'])
+            meta['plot']=cleanUnicode(str(meta['plot']))
         except:
-            pass
+            print 'could not clean plot'
 
             
         #Return the values to XBMC
