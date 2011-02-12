@@ -11,6 +11,6 @@ https://github.com/icefilms-xbmc/megaroutines
 
 v1.0.0 has been finalised. Metacontainers and metacontainer handlers have been fully updated and tested.
 It will now self-install the metacontainers when first run.
-However, there is the weird error that is produced after the meta containers are installed.
-Is the error is possibly due to file permissions?
+
+Big error is gone. Please test this and post any problems you have to http://forum.xbmc.org/showthread.php?t=90315
 
