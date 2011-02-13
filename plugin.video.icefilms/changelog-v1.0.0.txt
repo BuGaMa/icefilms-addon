@@ -1,4 +1,7 @@
-v1.0.0 (x, x February 2011):
+v1.0.0 (Sunday, 13 February 2011):
+  - support for megaupload changes
+  - context menus full of functions
+  - library mode
   - source images for megaupload and 2shared
   - cool new fanart and sub-category images made by HTPC Guy
   - tv show seasons directories

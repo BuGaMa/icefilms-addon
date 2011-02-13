@@ -35,7 +35,7 @@
     <summary>Icefilms.info Plugin</summary>
 
     <!-- Longer descrption of addon.  Usage instructions should go here if required. -->
-    <description>This XBMC plugin enables streaming scene releases from the megaupload links listed on Icefilms.info</description>
+    <description>This XBMC plugin enables streaming and downloading scene releases from the megaupload links listed on Icefilms.info</description>
 
     <!-- user defined tags e.g. <tags><tag>Example</tag></tags> -->
     <tags>
