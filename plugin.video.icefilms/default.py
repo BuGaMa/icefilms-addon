@@ -246,11 +246,20 @@ def ContainerStartup():
      else:
           print 'deleted unnecessary zip.'
 
+     metapath=os.path.join(translatedicedatapath,'meta_caches')
+
+     #delete the meta folder if there are no covers. (cleanup failed installs)
+     if os.path.exists(metapath):
+          if not os.path.exists(os.path.join(metapath,'themoviedb','covers','tt0011130')):
+               import shutil
+               try:
+                    shutil.rmtree(metapath)
+               except:
+                    print 'Failed to delete meta folder'
+                    return False
 
                         
      #Quick hack for v1.0.0 --- only run if meta_caches does not exist
-
-     metapath=os.path.join(translatedicedatapath,'meta_caches')
      if not os.path.exists(metapath):
 
           
