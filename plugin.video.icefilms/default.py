@@ -1,24 +1,25 @@
 #!/usr/bin/python
 
 #Icefilms.info v1.0.0 - anarchintosh / daledude 7/2/2011
-# quite convoluted code. needs a good clean for v1.1.0
 
-import sys,os,time
-import re
+# Quite convoluted code. Needs a good cleanup for v1.1.0
+
+import sys,os
+import time,re
 import urllib,urllib2,cookielib,html2text
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon
+
 from pysqlite2 import dbapi2 as sqlite
 
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
 from mega import megaroutines
-import clean_dirs
 from metautils import metahandlers
+import clean_dirs
 
 def xbmcpath(path,filename):
      translatedpath = os.path.join(xbmc.translatePath( path ), ''+filename+'')
      return translatedpath
-
        
 def Notify(typeq,title,message,times):
      #simplified way to call notifications. common notifications here.
@@ -192,13 +193,17 @@ def DLDirStartup():
 def LoginStartup():
      #Get whether user has set an account to use.
      Account = selfAddon.getSetting('megaupload-account')
+
+     mu=megaroutines.megaupload(translatedicedatapath)
+
+     #delete old logins
+     mu.delete_login()
      
      if Account == 'false':
           print 'Account: '+'no account set'
 
      elif Account == 'true':
           #check for megaupload login and do it
-          mu=megaroutines.megaupload(translatedicedatapath)
           
           megauser = selfAddon.getSetting('megaupload-username')
           megapass = selfAddon.getSetting('megaupload-password')
@@ -300,7 +305,11 @@ def Zip_DL_and_Install(url,dbtype,installtype):
                filepath_exists=os.path.exists(filepath)
                #if zip does not already exist, download from url, with nice display name.
                if filepath_exists==False:
+
+                    do_wait(thefile[3])
+                    
                     print 'downloading zip'
+                    
                     Download(thefile[0],filepath,dbtype+' '+installtype)
 
                     #make a text file with the same name as zip, to act as a very simple download log.
@@ -343,7 +352,6 @@ def Startup_Routines():
      EnableMeta = selfAddon.getSetting('use-meta')
      if EnableMeta=='true':
           ContainerStartup()
-
 
 def CATEGORIES():  #  (homescreen of addon)         
           #run startup stuff
@@ -1096,13 +1104,21 @@ def LOADMIRRORS(url):
      mlink=GetURL(mirrorpageurl)
 
      #check for recaptcha
-     has_recaptcha = re.search('recaptcha_challenge_field', mlink)
+     has_recaptcha = check_for_captcha(mlink)
 
-     if has_recaptcha is None:
+     if has_recaptcha is False:
           GETMIRRORS(mirrorpageurl,mlink)
-     elif has_recaptcha is not None:
+     elif has_recaptcha is True:
           RECAPTCHA(mirrorpageurl)
 
+def check_for_captcha(source):
+     #check for recaptcha in the page source, and return true or false.
+     has_recaptcha = re.search('recaptcha_challenge_field', source)
+
+     if has_recaptcha is None:
+          return False
+     elif has_recaptcha is not None:
+          return True
 
 def RECAPTCHA(url):
      print 'initiating recaptcha passthrough'
@@ -1124,6 +1140,7 @@ def RECAPTCHA(url):
      #hacky method --- save all captcha details and mirrorpageurl to file, to reopen in next step
      save(captchafile, challenge)
      save(pageurlfile, url)
+
      #addDir uses imageurl as url, to avoid xbmc displaying old cached image as the fresh captcha
      addDir('Enter Captcha - Type the letters',imageurl,99,imageurl)
 
@@ -1141,7 +1158,7 @@ def CATPCHAENTER(surl):
                resp = urllib.urlopen(url, parameters)
                link=resp.read() 
                resp.close()
-               has_recaptcha = CHECKForReCAPTCHA(link)
+               has_recaptcha = check_for_captcha(link)
                if has_recaptcha is False:
                     GETMIRRORS(url,link)
                elif has_recaptcha is True:
@@ -1455,25 +1472,6 @@ def WaitIf():
                #isice = re.search('.megaupload', currentvid)
                 xbmc.Player().stop()
 
-def VIDLINK_HANDLER(name,url):
-     #video link preflight, pays attention to settings / checks if url is mega or 2shared
-     ismega = re.search('.megaupload.com/', url)
-     is2shared = re.search('.2shared.com/', url)
-     
-     if ismega is not None:
-          mu=megaroutines.megaupload(translatedicedatapath)
-          source=mu.load_pagesrc(url)
-          filelink=mu.get_filelink(source,aviget=True)
-          
-          FilePlay(name,filelink)
-
-     elif is2shared is not None:
-          Notify('big','2Shared','2Shared is not supported by this addon. (Yet)','')
-          #shared2url=SHARED2_HANDLER(url)
-          #return shared2url
-
-
-
 def Get_Path(srcname,vidname):
      #get path for download
      mypath=os.path.normpath(str(selfAddon.getSetting('download-folder')))
@@ -1510,11 +1508,7 @@ def Get_Path(srcname,vidname):
      else:
           return 'path not set'
 
-def FilePlay(name,url):
-          #stack all parts including and after selected part
-     
-          #print 'FileURL: '+fileurl
-
+def Item_Meta(name):
           #set name as metadata, for selected source
           vidname=handle_file('videoname','open')
 
@@ -1523,8 +1517,9 @@ def FilePlay(name,url):
           description=handle_file('description','open')
           mpaafile=handle_file('mpaa','')
           
-          #srcname=openfile(sourcenamefile)
+          #srcname=handle_file('sourcename','open')
           srcname=name
+
           listitem = xbmcgui.ListItem(srcname)
           if not os.path.exists(mpaafile):
                listitem.setInfo('video', {'Title': vidname, 'plotoutline': description, 'plot': description})
@@ -1532,50 +1527,128 @@ def FilePlay(name,url):
                mpaa=openfile(mpaafile)
                listitem.setInfo('video', {'Title': vidname, 'plotoutline': description, 'plot': description, 'mpaa': mpaa})
           listitem.setThumbnailImage(poster)
-     
-          dialog = xbmcgui.Dialog()
-          playdialog = dialog.select('', ['Stream', 'Download', 'Check My Mega Limits', 'Kill Streaming', 'Cancel'])
-          if playdialog == 0:
 
-               WaitIf()
-               print 'attempting to stream file'
-               try:
-                    xbmc.Player().play(url, listitem)
-               except:
-                    print 'file streaming failed'
-                    Notify('megaalert','','','')
+          return listitem
 
-                    
-          if playdialog == 1:
 
-               WaitIf()
-               mypath=Get_Path(srcname,vidname)
-               print 'MYPATH: ',mypath
-               if mypath is 'path not set':
-                    Notify('Download Alert','You have not set the download folder.\n Please access the addon settings and set it.','','')
-               else:
-                    if os.path.isfile(mypath) is True:
-                         Notify('Download Alert','The video you are trying to download already exists!','','')
-                    else:     
-                         print 'attempting to download file'
-                         try:
-                              Download(url, mypath, vidname)
-                         except:
-                              print 'download failed'
-                         
+def do_wait(account):
+      if account is not 'premium':           
+            pDialog = xbmcgui.DialogProgress()
+            ret = pDialog.create('Megaupload', 'Waiting for link to become active...')
+
+            if account == 'none':
+                print 'no account: waiting 46 secs'
+                secs=0
+                percent=0
+                totalsecs=50
+                while secs < totalsecs: 
+                    secs = secs + 1
+                    if secs > 4:
+                        percent=(secs * 2)+8
+                    else:
+                        if secs == 1:
+                            percent = 3
+                        if secs == 2:
+                            percent = 7
+                        if secs == 3:
+                            percent = 11
+                        if secs == 4:
+                            percent = 15
+                    secs_to_wait=str((totalsecs - secs)+1)+' Seconds to wait...'
+                    pDialog.update(percent, secs_to_wait)
+                    time.sleep(1)
+                print 'done waiting'
+                return 'done'
+
+            if account == 'free':
+                print 'free account: waiting 26 secs'
+                secs=0
+                percent=0
+                totalsecs=30
+                while secs < totalsecs: 
+                    secs = secs + 1
+                    if secs < 25:
+                        percent = secs * 4
+                    else:
+                        percent = 99
+
+                    secs_to_wait=str((totalsecs - secs)+1)+' Seconds to wait...'
+
+                    pDialog.update(percent, secs_to_wait)
+                    time.sleep(1)
+                print 'done waiting'
                
-          if playdialog == 2:
-               WaitIf()
-               mu=megaroutines.megaupload(translatedicedatapath)
-               limit=mu.dls_limited()
-               if limit is True:
-                    Notify('megaalert1','','','')
-               elif limit is False:
-                    Notify('megaalert2','','','')
+      elif account is 'premium':
+          print 'premium account: no need to wait'
 
-          if playdialog == 3:
-               xbmc.Player().stop()
+     
+def Handle_Vidlink(url):
+     #video link preflight, pays attention to settings / checks if url is mega or 2shared
+     ismega = re.search('.megaupload.com/', url)
+     is2shared = re.search('.2shared.com/', url)
+     
+     if ismega is not None:
+          WaitIf()
           
+          mu=megaroutines.megaupload(translatedicedatapath)
+          link=mu.resolve_megaup(url)
+
+          do_wait(link[3])
+
+          return link
+
+     elif is2shared is not None:
+          return False
+          Notify('big','2Shared','2Shared is not supported by this addon. (Yet)','')
+          #shared2url=SHARED2_HANDLER(url)
+          #return shared2url
+
+
+def Stream_Source(name,url):
+     link=Handle_Vidlink(url)
+     listitem=Item_Meta(name)
+     print 'attempting to stream file'
+     try:
+          xbmc.Player().play(link[0], listitem)
+     except:
+          print 'file streaming failed'
+          Notify('megaalert','','','')
+
+
+
+def Download_Source(name,url):
+
+     #get proper name of vid
+     vidname=handle_file('videoname','open')
+
+     mypath=Get_Path(name,vidname)
+
+     print 'MYPATH: ',mypath
+     if mypath is 'path not set':
+          Notify('Download Alert','You have not set the download folder.\n Please access the addon settings and set it.','','')
+
+     else:
+          if os.path.isfile(mypath) is True:
+               Notify('Download Alert','The video you are trying to download already exists!','','')
+          else:              
+               link=Handle_Vidlink(url)
+               print 'attempting to download file'
+               try:
+                    Download(link[0], mypath, vidname)
+               except:
+                    print 'download failed'
+
+def Check_Mega_Limits(name,url):
+     WaitIf()
+     mu=megaroutines.megaupload(translatedicedatapath)
+     limit=mu.dls_limited()
+     if limit is True:
+          Notify('megaalert1','','','')
+     elif limit is False:
+          Notify('megaalert2','','','')
+
+def Kill_Streaming(name,url):
+     xbmc.Player().stop()     
 
 class StopDownloading(Exception): 
         def __init__(self, value): 
@@ -1669,14 +1742,31 @@ def _pbhook(numblocks, blocksize, filesize, dp, start_time):
    
 def addExecute(name,url,mode,iconimage):
 
-     # A list item that executes the next mode, but does'nt clear the screen of current list items.
+    # A list item that executes the next mode, but does'nt clear the screen of current list items.
 
-        u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
-        ok=True
-        liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
-        liz.setInfo( type="Video", infoLabels={ "Title": name } )
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)
-        return ok
+    #encode url and name, so they can pass through the sys.argv[0] related strings
+    sysname = urllib.quote_plus(name)
+    sysurl = urllib.quote_plus(url)
+    
+    u = sys.argv[0] + "?url=" + sysurl + "&mode=" + str(mode) + "&name=" + sysname
+    ok=True
+
+    liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
+    liz.setInfo( type="Video", infoLabels={ "Title": name } )
+
+    #handle adding context menus
+    contextMenuItems = []
+
+
+    contextMenuItems.append(('Download', 'XBMC.RunPlugin(%s?mode=201&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
+    contextMenuItems.append(('Check Mega Limits', 'XBMC.RunPlugin(%s?mode=202&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
+    contextMenuItems.append(('Kill Streams', 'XBMC.RunPlugin(%s?mode=203&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
+
+    
+    liz.addContextMenuItems(contextMenuItems, replaceItems=True)
+
+    ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)
+    return ok
 
 
 
@@ -1979,7 +2069,16 @@ elif mode==111:
 
 elif mode==200:
         print ""+url
-        VIDLINK_HANDLER(name,url)
+        Stream_Source(name,url)
+
+elif mode==201:
+        Download_Source(name,url)
+
+elif mode==202:
+        Check_Mega_Limits(name,url)
+
+elif mode==203:
+        Kill_Streaming(name,url)
 
 elif mode==300:
         toggleLibraryMode()

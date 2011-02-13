@@ -1,7 +1,7 @@
 
 '''
  _ ___ __  _   __  __    ____      ___ __ 
- /|/|(_  / _ /_| /__)/  )/  //  //| )(_  (   v0.1
+ /|/|(_  / _ /_| /__)/  )/  //  //| )(_  (   v0.1.2
 /   |/__(__)(  |/ ( (__/(__/(  (/ |/ /____)  Copyleft Anarchintosh.
 
 Python link resolver for megaupload.
@@ -11,50 +11,6 @@ In the future it will support Megaporn+Megaporn/Video links.
 Credits: Thank you Coolblaze,Voinage and PGuedes for the megavideo code.
          Also, thanks to the author of this code:
          http://stackoverflow.com/questions/4422389/use-mechanize-to-log-into-megaupload
-
-Requires: The mechanize module. Google for it.
-
-Supports:
--Login (premium and free)
--Get megavideo links from megaupload pages that have them
--Return direct megaupload file links ( useful for streaming high quality video )
--Returning Megavideo .flv file links [DOES'NT AT THE MOMENT SUPPORT THIS]
--Other useful functions.
-
-Usage:
-#Required imports
------from mega.megaroutines import megaupload,megavideo
-import megaroutines
-
-#(Required) Initialize megaupload handling
-mypath='set-a-path-that-megaroutines-can-save-its-folder-to'
-mu=megaroutines.megaupload(mypath)
-
-#Do a login. Returns True if successful. Optional.
-login=mu.set_login('myusername','mypassword')
-print login
-
-#Check if download limit is reached. Returns true if limit reached.
-#IF YOU ARE LOGGING IN, YOU MUST DO THIS AFTER DOING A LOG IN.
-mylimit=dls_limited()
-print mylimit
-
-#How to load page source (handling logins/cookies automaticly)
-source=mu.load_pagesrc('http://www.megaupload.com/?d=XXXXXXXX')
-
-#Extra check for whether the source code was loaded with login.
-pagelogin=mu.check_login(source)
-
-#Return a megavideo equivalent for the megaupload link if possible.
-megavid=mu.get_megavid(source)
-
-#Return the direct link to file from the megaupload source.
-filelink=mu.get_filelink(source,aviget=True)
-
-#get name of file, from either page source or filelink
-filename=_get_filename(url=filelink)
-or
-filename=_get_filename(source=source)
 '''
 
 import re,sys,os,os.path
@@ -89,12 +45,11 @@ def checkurl(url):
            elif ispornvid is None:
               return 'pornup'
 
+
 #set names of important files     
 cookiefile='cookies.lwp' 
 megaloginfile='MegaLogin.txt'
 pornloginfile='PornLogin.txt'
-
-
 
 
 def get_dir(mypath, dirname):
@@ -104,6 +59,7 @@ def get_dir(mypath, dirname):
         os.makedirs(subpath)
     return subpath
 
+          
 class megaupload:
    def __init__(self,path):
         self.class_name='megaupload'
@@ -111,14 +67,23 @@ class megaupload:
         self.classpath = get_dir(self.path,self.class_name)
         self.cookie = os.path.join(self.classpath,cookiefile)
         self.loginfile = os.path.join(self.path,megaloginfile)
-        
-        #self.megauser = megauser
-        #self.megapass = megauser
-        #self.logincookie = Do_Login
-        #Do_Login(self.path,'megaupload',self.megauser,self.megapass)
+
+
+   def resolve_megaup(self,url,aviget=False):
+
+        #bring together all the functions into a simple user-friendly function.
+
+        source=self.load_pagesrc(url)
+        filelink=self.get_filelink(source,aviget)
+        filename=self._get_filename(filelink)
+        megavidlink=self.get_megavid(source)
+        logincheck=self.check_login(source)
+
+        return filelink,filename,megavidlink,logincheck
 
 
    def load_pagesrc(self,url):
+     
      #loads page source code.
      urltype=checkurl(url)
      if urltype is 'megaup' or 'megaporn':
@@ -130,13 +95,20 @@ class megaupload:
 
    def check_login(self,source):
         #feed me some megaupload page source
-        #returns true if logged in
+        #returns 'free' or 'premium' if logged in
+        #returns 'none' if not logged in
         
-        checker = re.search('<b>Welcome</b>', source)
-        if checker is not None:
-             return True
-        if checker is None:
-             return False
+        login = re.search('<b>Welcome</b>', source)
+        premium = re.search('flashvars.status = "premium";', source)
+        
+
+        if login is not None:
+             if premium is not None:
+                  return 'premium'
+             elif premium is None:
+                  return 'free'
+        elif login is None:
+             return 'none'
 
  
    def dls_limited(self):
@@ -145,7 +117,7 @@ class megaupload:
      truestring='Download limit exceeded'
      falsestring='Hooray Download Success'   
 
-     #url to a special text file that contains the words: Hooray Download Success        
+     #url to a special small text file that contains the words: Hooray Download Success        
      testurl='http://www.megaupload.com/?d=6PU2QD8U'
 
      source=self.load_pagesrc(testurl)
@@ -175,7 +147,7 @@ class megaupload:
           pass
 
         
-   def set_login(self,megauser=False,megapass=False,RefreshCookies=True):
+   def set_login(self,megauser=False,megapass=False):
         #create a login file  
           loginstring='Username:'+megauser+' Password:'+megapass
           save(self.loginfile,loginstring)
@@ -185,12 +157,6 @@ class megaupload:
 
           #return whether login was successful
           return login
-
-   def resolve_megaup(self,url):
-        source=self.load_pagesrc(url)
-        filelink=self.get_filelink(source)
-        filename=self._get_filename(filelink)
-        return filelink,filename
    
    def get_megavid ( self,source ):
         #verify source is megaupload 
@@ -209,21 +175,29 @@ class megaupload:
               #no megavideo link on page
               return None
         if ismegaup is None:
-           return 'not a megaupload url'
+           print 'not a megaupload url'
+           return None
 
 
    def get_filelink(self,source,aviget=False):
           # load megaupload page and scrapes and adds videolink, passes through partname.  
           #print 'getting file link....'
 
+          #try getting the premium link. if it returns none, use free link scraper.
+          match1=re.compile('<a href="(.+?)" class="down_ad_butt1">').findall(source)
+          if str(match1)=='[]':
+               match2=re.compile('id="downloadlink"><a href="(.+?)" class=').findall(source)
+               url=match2[0]
+          else:
+               url=match1[0]
+
+
           #aviget is an option where if a .divx file is found, it is renamed to .avi (necessary for XBMC)
-          
-          match=re.compile('id="downloadlink"><a href="(.+?)" class=').findall(source)
-          url=match[0]
           if aviget is True and url.endswith('divx'):
                     return url[:-4]+'avi'
           else:          
                     return url
+
 
    def _get_filename(self,url=False,source=False):
         #accept either source or url
@@ -361,7 +335,7 @@ def GetURL(url,self=False):
 
 #-------Megavideo
 
-#class to simplify usage of the functions
+#class to simplify usage of the functions. NOT YET WORKING!
 
 #if megaupload directory exists it will use duplicate that login
 class megavideo:
