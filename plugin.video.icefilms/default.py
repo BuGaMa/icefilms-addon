@@ -1588,7 +1588,8 @@ def do_wait(account):
                 print 'done waiting'
                
       elif account is 'premium':
-          print 'premium account: no need to wait'
+          time.sleep(1)
+          print 'premium account: waiting 1 secs'
 
      
 def Handle_Vidlink(url):
@@ -1806,7 +1807,7 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
                     'premiered':meta['premiered'],
                     'studio':meta['studios'],
                     'mpaa':str(meta['mpaa']),
-                    'trailer':str(meta['trailer_url']),
+                    'trailer':"plugin://plugin.video.youtube/?action=play_video&videoid=%s" % str(meta['trailer_url'])[str(meta['trailer_url']).rfind("v=")+2:],
                     'code':str(meta['imdb_id']),
                     'rating':float(meta['rating'])})
 
