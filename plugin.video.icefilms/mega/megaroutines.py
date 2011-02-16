@@ -1,7 +1,6 @@
-
 '''
  _ ___ __  _   __  __    ____      ___ __ 
- /|/|(_  / _ /_| /__)/  )/  //  //| )(_  (   v0.1.2
+ /|/|(_  / _ /_| /__)/  )/  //  //| )(_  (   v0.2
 /   |/__(__)(  |/ ( (__/(__/(  (/ |/ /____)  Copyleft Anarchintosh.
 
 Python link resolver for megaupload.
@@ -68,26 +67,53 @@ class megaupload:
         self.cookie = os.path.join(self.classpath,cookiefile)
         self.loginfile = os.path.join(self.path,megaloginfile)
 
-
-   def resolve_megaup(self,url,aviget=False):
+   def megavid_force(self,url,disable_cookies=True):
+        source=self.load_pagesrc(url,disable_cookies)
+        megavidlink=self.get_megavid(source)
+        return megavidlink
+      
+   def resolve_megaup(self,url,aviget=False,force_megavid=False):
 
         #bring together all the functions into a simple user-friendly function.
 
         source=self.load_pagesrc(url)
-        filelink=self.get_filelink(source,aviget)
-        filename=self._get_filename(filelink)
-        megavidlink=self.get_megavid(source)
-        logincheck=self.check_login(source)
 
+        #if source is a url (from a Direct Downloads re-direct) not pagesource
+        if source.startswith('http://'):
+             filelink=source
+
+             #can't get megavid link if using direct download, however, can load megaup page without cookies, then scrape.
+             #this is time consuming, hence the force_megavid flag needed to enable it.
+             if force_megavid is False:
+                  megavidlink=None
+             elif force_megavid is True:
+                  megavidlink=self.megavid_force(url)
+
+             #speed patch (we know its premium, since we're getting a direct download)
+             logincheck='premium'
+
+        else: # if source is html page code...
+
+             #scrape the direct filelink from page
+             filelink=self.get_filelink(source,aviget)
+
+             #scrape the megavideo link if there is one on the page
+             megavidlink=self.get_megavid(source)
+
+             logincheck=self.check_login(source)
+
+        filename=self._get_filename(filelink)
+        
         return filelink,filename,megavidlink,logincheck
 
 
-   def load_pagesrc(self,url):
+   def load_pagesrc(self,url,disable_cookies=False):
      
-     #loads page source code.
+     #loads page source code. redirect url is returned if Direct Downloads is enabled.
+        
      urltype=checkurl(url)
      if urltype is 'megaup' or 'megaporn':
-          link=GetURL(url,self)
+          link=GetURL(url,self,disable_cookies)
           return link
      else:
           return False
@@ -99,8 +125,7 @@ class megaupload:
         #returns 'none' if not logged in
         
         login = re.search('<b>Welcome</b>', source)
-        premium = re.search('flashvars.status = "premium";', source)
-        
+        premium = re.search('flashvars.status = "premium";', source)        
 
         if login is not None:
              if premium is not None:
@@ -297,22 +322,26 @@ def Do_Login(self,megauser=False,megapass=False):
                     return True
                     
 
-def GetURL(url,self=False):
+def GetURL(url,self=False,disable_cookies=False):
      #print 'processing url: '+url
 
      #logic to designate whether to handle cookies
      urltype=checkurl(url)
-     if urltype is 'megaup' or 'megaporn' or 'megavid':
-          if self is not False:
-               if os.path.exists(self.cookie):
-                    use_cookie=True
+     if disable_cookies==False:
+          if urltype is 'megaup' or 'megaporn' or 'megavid':
+               if self is not False:
+                    if os.path.exists(self.cookie):
+                         use_cookie=True
+                    else:
+                         use_cookie=False  
                else:
                     use_cookie=False  
           else:
                     use_cookie=False  
      else:
           use_cookie=False
-               
+
+     # don't use cookie, if not logged in          
      if use_cookie is False:
           req = urllib2.Request(url)
           req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')       
@@ -320,6 +349,8 @@ def GetURL(url,self=False):
           link=response.read()
           response.close()
           return link
+
+     # use cookie, if logged in
      if use_cookie is True:
           cj = cookielib.LWPCookieJar()
           cj.load(self.cookie)
@@ -327,9 +358,18 @@ def GetURL(url,self=False):
           req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')       
           opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
           response = opener.open(req)
-          link=response.read()
-          response.close()
-          return link
+
+          #check if we were redirected (megapremium Direct Downloads...)
+          finalurl = response.geturl()
+          if finalurl is url:
+               link=response.read()
+               response.close()
+               return link
+          elif finalurl is not url:
+               #if we have been redirected, return the redirect url
+               return finalurl
+
+
 
 #---------------------END MEGAUPLOAD CODE--------------------------#
 

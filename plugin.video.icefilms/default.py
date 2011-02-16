@@ -9,8 +9,6 @@ import time,re
 import urllib,urllib2,cookielib,html2text
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon
 
-from pysqlite2 import dbapi2 as sqlite
-
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
 from mega import megaroutines
@@ -1588,8 +1586,8 @@ def do_wait(account):
                 print 'done waiting'
                
       elif account is 'premium':
-          time.sleep(1)
-          print 'premium account: waiting 1 secs'
+          time.sleep(3)
+          print 'premium account: waiting 3 secs'
 
      
 def Handle_Vidlink(url):
