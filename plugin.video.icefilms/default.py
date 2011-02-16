@@ -1563,7 +1563,7 @@ def do_wait(account):
                             percent = 15
                     secs_to_wait=str((totalsecs - secs)+1)+' Seconds to wait...'
                     pDialog.update(percent, secs_to_wait)
-                    time.sleep(1)
+                    xbmc.sleep(1000)
                 print 'done waiting'
                 return 'done'
 
@@ -1582,11 +1582,11 @@ def do_wait(account):
                     secs_to_wait=str((totalsecs - secs)+1)+' Seconds to wait...'
 
                     pDialog.update(percent, secs_to_wait)
-                    time.sleep(1)
+                    xbmc.sleep(1000)
                 print 'done waiting'
                
       elif account is 'premium':
-          time.sleep(3)
+          xbmc.sleep(3000)
           print 'premium account: waiting 3 secs'
 
      
@@ -1617,7 +1617,8 @@ def Stream_Source(name,url):
      listitem=Item_Meta(name)
      print 'attempting to stream file'
      try:
-          xbmc.Player().play(link[0], listitem)
+          #directly call xbmc player (provides more options)
+          xbmc.Player( xbmc.PLAYER_CORE_DVDPLAYER ).play( link[0], listitem )
      except:
           print 'file streaming failed'
           Notify('megaalert','','','')
