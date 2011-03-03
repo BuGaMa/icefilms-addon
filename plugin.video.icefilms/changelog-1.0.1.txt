@@ -1,3 +1,9 @@
+v1.0.2 (Thursday, 3 March 2011):
+  - fixed Black Swan and King's Speech error
+  - fixed unicode metadata error
+  - added download with jDownloader context menu option for sources.
+    (requires jDownloader xbmc plugin installed)
+
 v1.0.1 (Wednesday, 16 February 2011):
   - updated megaroutines (supports premium direct downloads)
   - replaced time.sleep with xbmc.sleep for waiting times

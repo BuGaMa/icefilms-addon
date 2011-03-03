@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#Icefilms.info v1.0.0 - anarchintosh / daledude 7/2/2011
+#Icefilms.info v1.0.2 - anarchintosh / daledude 3/3/2011
 
 # Quite convoluted code. Needs a good cleanup for v1.1.0
 

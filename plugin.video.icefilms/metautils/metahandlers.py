@@ -11,7 +11,7 @@ They can both be found in the same folder.
 
 *Credits: Daledude / Anarchintosh 
 
-*Last Updated: 9th/Febuary/2011
+*Last Updated: 3rd/March/2011
     
 *To-Do:
 - write a clean database function (correct imgs_prepacked by checking if the images actually exist)
