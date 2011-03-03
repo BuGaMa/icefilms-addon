@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#Icefilms.info v1.0.2 - anarchintosh / daledude 3/3/2011
+#Icefilms.info v1.0.0 - anarchintosh / daledude 7/2/2011
 
 # Quite convoluted code. Needs a good cleanup for v1.1.0
 
@@ -8,6 +8,7 @@ import sys,os
 import time,re
 import urllib,urllib2,cookielib,html2text
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon
+import unicodedata
 
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
@@ -1182,63 +1183,40 @@ def GETMIRRORS(url,link):
      mirrorfile=handle_file('mirror','')
      save(mirrorfile, link)
 
-     #strings for checking the existence of categories      
-     dvdrip=re.search('<div class=ripdiv><b>DVDRip / Standard Def</b>', link)
-     hd720p=re.search('<div class=ripdiv><b>HD 720p</b>', link)
-     dvdscreener=re.search('<div class=ripdiv><b>DVD Screener</b>', link)
-     r5r6=re.search('<div class=ripdiv><b>R5/R6 DVDRip</b>', link)
+     #check for the existence of categories, and set values.
+     if re.search('<div class=ripdiv><b>DVDRip / Standard Def</b>', link) is not None: dvdrip = 1
+     else: dvdrip = 0
+     
+     if re.search('<div class=ripdiv><b>HD 720p</b>', link) is not None: hd720p = 1
+     else: hd720p = 0
+     
+     if re.search('<div class=ripdiv><b>DVD Screener</b>', link) is not None: dvdscreener = 1
+     else: dvdscreener = 0
 
-     #check that these categories exist, if they do set values to true.
-     if dvdrip is not None:
-          dvdrip = 'true'
-     if hd720p is not None:
-          hd720p = 'true'
-     if dvdscreener is not None:
-          dvdscreener = 'true'
-     if r5r6 is not None:
-          r5r6 = 'true'
-     #check that these categories exist, if they dont set values to false.
-     if dvdrip is None:
-          dvdrip = 'false'
-     if hd720p is None:
-          hd720p = 'false'
-     if dvdscreener is None:
-          dvdscreener = 'false'
-     if r5r6 is None:
-          r5r6 = 'false'
+     if re.search('<div class=ripdiv><b>R5/R6 DVDRip</b>', link) is not None: r5r6 = 1
+     else: r5r6 = 0
 
      FlattenSrcType = selfAddon.getSetting('flatten-source-type')        
 
      #only detect and proceed directly to adding sources if flatten sources setting is true
      if FlattenSrcType == 'true':
-          #check if there is more than one directory
-          if dvdrip == 'true' and hd720p == 'true':
-               only1 = 'false'
-          if dvdrip == 'true' and dvdscreener == 'true':
-               only1 = 'false'
-          if dvdrip == 'true' and r5r6 == 'true':
-               only1 = 'false'
-          if dvdscreener == 'false' and r5r6 == 'false':
-               only1 = 'false'
-          if hd720p == 'true' and dvdscreener == 'false':
-               only1 = 'false'
-          if r5r6 == 'true' and hd720p == 'true':
-               only1 = 'false'
-          #check if there is only one directory      
-          if dvdrip == 'true' and hd720p == 'false' and dvdscreener == 'false' and r5r6 == 'false':
-               only1 = 'true'
-               DVDRip(url)
-          if dvdrip == 'false' and hd720p == 'true' and dvdscreener == 'false' and r5r6 == 'false':
-               only1 = 'true'
-               HD720p(url)
-          if dvdrip == 'false' and hd720p == 'false' and dvdscreener == 'true' and r5r6 == 'false':
-               only1 = 'true'
-               DVDScreener(url)
-          if dvdrip == 'false' and hd720p == 'false' and dvdscreener == 'false' and r5r6 == 'true':
-               only1 = 'true'
-               R5R6(url)
-          #add directories of source categories if only1 is false
-          if only1 == 'false':
+
+          #add up total number of categories.
+          total = dvdrip + hd720p + dvdscreener + r5r6
+
+          #if there is only one category, skip to adding sources.
+          if total == 1:
+               if dvdrip == 1:
+                    DVDRip(url)
+               elif hd720p == 1:
+                    HD720p(url)
+               elif dvdscreener == 1:
+                    DVDScreener(url)
+               elif r5r6 == 1:
+                    R5R6(url)
+
+          #if there are multiple categories, add sub directories.
+          elif total > 1:
                addCatDir(url,dvdrip,hd720p,dvdscreener,r5r6)
 
      #if flattensources is set to false, don't flatten                
@@ -1248,13 +1226,13 @@ def GETMIRRORS(url,link):
 
                 
 def addCatDir(url,dvdrip,hd720p,dvdscreener,r5r6):
-        if dvdrip == 'true':
+        if dvdrip == 1:
                 addDir('DVDRip',url,101,'')
-        if hd720p == 'true':
+        if hd720p == 1:
                 addDir('HD 720p',url,102,'')
-        if dvdscreener == 'true':
+        if dvdscreener == 1:
                 addDir('DVD Screener',url,103,'')
-        if r5r6 == 'true':
+        if r5r6 == 1:
                 addDir('R5/R6 DVDRip',url,104,'') 
 
 def Add_Multi_Parts(name,url,icon):
@@ -1766,18 +1744,21 @@ def addExecute(name,url,mode,iconimage):
     #handle adding context menus
     contextMenuItems = []
 
-
     contextMenuItems.append(('Download', 'XBMC.RunPlugin(%s?mode=201&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
+    contextMenuItems.append( ( "Download with jDownloader", "XBMC.RunPlugin(plugin://plugin.program.jdownloader/?action=addlink&url=%s)" % ( sysurl )) )
     contextMenuItems.append(('Check Mega Limits', 'XBMC.RunPlugin(%s?mode=202&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
     contextMenuItems.append(('Kill Streams', 'XBMC.RunPlugin(%s?mode=203&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
 
-    
     liz.addContextMenuItems(contextMenuItems, replaceItems=True)
 
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)
     return ok
 
-
+def cleanUnicode(string):   
+    try:
+         string = unicodedata.normalize('NFKD', string).encode('ascii','ignore')
+    except:
+         return string 
 
 def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=False, total=False, disablefav=False):
     meta = metainfo
@@ -1797,10 +1778,11 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
         liz.setInfo(type="Video", infoLabels={"Title": name})
 
     if meta is not False:
+        plotmeta = cleanUnicode(meta['plot'])
         liz = xbmcgui.ListItem(name, iconImage=str(meta['cover_url']), thumbnailImage=str(meta['cover_url']))
         liz.setInfo(type="Video",
-                    infoLabels={'title':name,
-                    'plot':meta['plot'],
+                    infoLabels={'title':str(name),
+                    'plot':str(plotmeta),
                     'genre':meta['genres'],
                     'duration':str(meta['duration']),
                     'premiered':meta['premiered'],

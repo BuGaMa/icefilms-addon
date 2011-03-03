@@ -11,7 +11,7 @@ They can both be found in the same folder.
 
 *Credits: Daledude / Anarchintosh 
 
-*Last Updated: 3rd/March/2011
+*Last Updated: 9th/Febuary/2011
     
 *To-Do:
 - write a clean database function (correct imgs_prepacked by checking if the images actually exist)
@@ -97,10 +97,10 @@ def GetURL(url):
      return link
 
 def cleanUnicode(string):
-    try:
-        string = string.replace("'","").replace(unicode(u'\u201c'), '"').replace(unicode(u'\u201d'), '"').replace(unicode(u'\u2019'),'').replace(unicode(u'\u2026'),'...').replace(unicode(u'\u2018'),'').replace(unicode(u'\u2013'),'-')
-        return string
-    except:
+    #try:
+    #    string = string.replace("'","").replace(unicode(u'\u201c'), '"').replace(unicode(u'\u201d'), '"').replace(unicode(u'\u2019'),'').replace(unicode(u'\u2026'),'...').replace(unicode(u'\u2018'),'').replace(unicode(u'\u2013'),'-')
+    #    return string
+    #except:
         return string    
 
 class MetaContainer:       
@@ -448,12 +448,6 @@ class MovieMetaData:
 
                         #if not os.path.exists(backdrop_path):
                         #        self._downloadimages(meta,'movies',imdb_id)
-
-        #Clean some unicode stuff
-        try:
-            meta['plot']=cleanUnicode(str(meta['plot']))
-        except:
-            print 'could not clean plot'
 
             
         #Return the values to XBMC
