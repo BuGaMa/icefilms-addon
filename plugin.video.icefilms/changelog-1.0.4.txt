@@ -1,4 +1,8 @@
-v1.0.2 (Thursday, 3 March 2011):
+v1.0.4 (Friday, 4 March 2011):
+  - fixes for favourites handling
+  - possible speed-ups
+
+v1.0.(2,3) (Thursday, 3 March 2011):
   - fixed Black Swan and King's Speech error
   - fixed unicode metadata error
   - added download with jDownloader context menu option for sources.

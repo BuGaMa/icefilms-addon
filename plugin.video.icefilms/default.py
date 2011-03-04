@@ -1,20 +1,21 @@
 #!/usr/bin/python
 
-#Icefilms.info v1.0.0 - anarchintosh / daledude 7/2/2011
+#Icefilms.info v1.0.4 - anarchintosh / daledude 4/3/2011
 
 # Quite convoluted code. Needs a good cleanup for v1.1.0
 
 import sys,os
 import time,re
-import urllib,urllib2,cookielib,html2text
+import urllib,urllib2,cookielib,base64
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon
 import unicodedata
 
+import clean_dirs
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
 from mega import megaroutines
 from metautils import metahandlers
-import clean_dirs
+
 
 def xbmcpath(path,filename):
      translatedpath = os.path.join(xbmc.translatePath( path ), ''+filename+'')
@@ -44,7 +45,6 @@ def Notify(typeq,title,message,times):
           message="No problems! You have not reached your limit."
           dialog = xbmcgui.Dialog()
           dialog.ok(' '+title+' ', ' '+message+' ')
-
 
 #get path to me
 icepath=os.getcwd()
@@ -121,11 +121,7 @@ def handle_file(filename,getmode=''):
                return opened_return_file
           except:
                print 'opening failed'
-
-
-#get settings
-selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
-
+     
 #useful global strings:
 iceurl = 'http://www.icefilms.info/'
 
@@ -146,7 +142,7 @@ def appendfile(filename,contents):
      fh.close()
 
 
-def DLDirStartup():
+def DLDirStartup(selfAddon):
 
   # Startup routines for handling and creating special download directory structure 
   SpecialDirs=selfAddon.getSetting('use-special-structure')
@@ -189,7 +185,7 @@ def DLDirStartup():
                cl.DelEmptyFolders(moviepath)
 
 
-def LoginStartup():
+def LoginStartup(selfAddon):
      #Get whether user has set an account to use.
      Account = selfAddon.getSetting('megaupload-account')
 
@@ -223,7 +219,7 @@ def LoginStartup():
                print 'no login details specified, using no account'
                Notify('big','Megaupload','Login failed. Megaupload will load with no account.','')
                                 
-def ContainerStartup():
+def ContainerStartup(selfAddon):
 
      #delete zips from the 'downloaded meta zips' dir that have equivalent text files.
      #have to do this at startup because it is not possible to delete the original file
@@ -334,7 +330,8 @@ def Zip_DL_and_Install(url,dbtype,installtype):
                return install
 
 
-def Startup_Routines():
+def Startup_Routines(selfAddon):
+     
      # avoid error on first run if no paths exists, by creating paths
      if not os.path.exists(translatedicedatapath):
           os.makedirs(translatedicedatapath)
@@ -351,19 +348,22 @@ def Startup_Routines():
      #xbmc.executebuiltin('UpdateAddonRepos')
      
      # Run the startup routines for special download directory structure 
-     DLDirStartup()
+     DLDirStartup(selfAddon)
 
      # Run the login startup routines
-     LoginStartup()
+     LoginStartup(selfAddon)
 
      # Run the container checking startup routines, if enable meta is set to true
      EnableMeta = selfAddon.getSetting('use-meta')
      if EnableMeta=='true':
-          ContainerStartup()
+          ContainerStartup(selfAddon)
 
-def CATEGORIES():  #  (homescreen of addon)         
+def CATEGORIES():  #  (homescreen of addon)
+          #get settings
+          selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+
           #run startup stuff
-          Startup_Routines()
+          Startup_Routines(selfAddon)
           print 'Homescreen'
 
           #get necessary paths
@@ -389,8 +389,79 @@ def CATEGORIES():  #  (homescreen of addon)
           addDir('Search',iceurl,55,search)
 
 
+def prepare_list(directory,dircontents):
+     #create new empty list
+     stringList = []
+
+     #Open all files in dir
+     for thefile in dircontents:
+          try:
+               filecontents=openfile(os.path.join(directory,thefile))
+
+               #add this to list
+               stringList.append(filecontents)
+                              
+          except:
+               print 'problem with opening a favourites item'
+
+     #sort list alphabetically and return it.
+     tupleList = [(x.lower(), x) for x in stringList]
+     tupleList.sort()
+     return [x[1] for x in tupleList]
+
+def favRead(string):
+     try:
+          splitter=re.split('\|+', string)
+          name=splitter[0]
+          url=splitter[1]
+          mode=int(splitter[2])
+          try:
+               imdb_id=str(splitter[3])
+          except:
+               imdb_id=''
+     except:
+          return None
+     else:
+          return name,url,mode,imdb_id
+
+def addFavourites(enablemetadata,directory,dircontents):
+     #get the strings of data from the files, and return them alphabetically
+     stringlist=prepare_list(directory,dircontents)
+
+     if enablemetadata == True:
+          metaget=metahandlers.MovieMetaData(translatedicedatapath)
+          
+     #for each string
+     for thestring in stringlist:
+
+          #split it into its component parts
+          info = favRead(thestring)
+          if info is not None:
+
+               if enablemetadata == True:
+                    #return the metadata dictionary
+                    if info[3] is not None:
+                         meta=metaget.get_movie_meta(info[3])
+                         
+                         if meta is None:
+                              #add all the items without meta
+                              addDir(info[0],info[1],info[2],'',delfromfav=True)
+                         else:
+                              #add directories with meta
+                              addDir(info[0],info[1],info[2],'',metainfo=meta,delfromfav=True,imdb=info[3])        
+                    else:
+                         #add all the items without meta
+                         addDir(info[0],info[1],info[2],'',delfromfav=True)
+               else:
+                    #add all the items without meta
+                    addDir(info[0],info[1],info[2],'',delfromfav=True)
+
+     
 def FAVOURITES(url):
-          #Favourites folder. This function is not very neat code.
+          #get settings
+          selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+          
+          #Favourites folder. This function is very messy code.
      
           favpath=os.path.join(translatedicedatapath,'Favourites')
           tvfav=os.path.join(favpath,'TV')
@@ -405,88 +476,42 @@ def FAVOURITES(url):
                moviedircontents=None
                
           if tvdircontents == None and moviedircontents == None:
-               Notify('big','No Favourites Saved','To save a favourite press the C key on a movie or\n TV Show and select Add To Icefilms Favourites','')
+               Notify('big','No Favourites Saved','To save a favourite press the C key on a movie or\n TV Show and then select Add To Icefilms Favourites','')
 
           else:
                #add clear favourites entry
                addExecute('* Clear Favourites Folder *',url,58,os.path.join(art,'deletefavs.png'))
-
-               
+             
                #handler for all tv favourites
                if tvdircontents is not None:
-                    #Open all files in tv dir
-                    for thefile in tvdircontents:
-                         try:
-                              filecontents=openfile(os.path.join(tvfav,thefile))
 
-                              splitter=re.split('\|+', filecontents)
-                              name=splitter[0]
-                              url=splitter[1]
-                              mode=int(splitter[2])
+                    addFavourites(False,tvfav,tvdircontents)
 
-                              addDir(name,url,mode,'',delfromfav=True)
-                         except:
-                                   print 'problem adding a tv favourites item'
-                         
+               elif tvdircontents is None:
+                    print 'tvdircontents is none!'
+
 
                #handler for all movie favourites
                if moviedircontents is not None:
 
-                    meta_path=os.path.join(translatedicedatapath,'meta_caches')
-                    use_meta=os.path.exists(meta_path)
+                    #get the necessary meta stuff
+                    use_meta=os.path.exists(os.path.join(translatedicedatapath,'meta_caches'))
                     meta_setting = selfAddon.getSetting('use-meta')
 
                     #add without metadata -- imdb is still passed for use with Add to Favourites
                     if use_meta==False or meta_setting=='false':
 
-                         #Open all files in movie dir
-                         for thefile in moviedircontents:
-                              try:
-                                   filecontents=openfile(os.path.join(moviefav,thefile))
-
-                                   splitter=re.split('\|+', filecontents)
-                                   name=splitter[0]
-                                   url=splitter[1]
-                                   mode=int(splitter[2])
-                                   imdb_id=splitter[3]
-                              
-                                   #don't add with meta
-                                   addDir(name,url,mode,'',delfromfav=True)
-                              except:
-                                   print 'problem adding a movie favourites item'
+                         addFavourites(False,moviefav,moviedircontents)
 
                     #add with metadata -- imdb is still passed for use with Add to Favourites
-                    if use_meta==True or meta_setting=='true':
+                    elif use_meta==True and meta_setting=='true':
 
-                         #initialise meta class before loop
-                         metaget=metahandlers.MovieMetaData(translatedicedatapath)
+                         addFavourites(True,moviefav,moviedircontents)
 
-                         #do these steps for all files in movie dir
-                         for thefile in moviedircontents:
-                              try:
-                                   filecontents=openfile(os.path.join(moviefav,thefile))
+               elif moviedircontents is None:
+                    print 'moviedircontents is none!'
 
-                                   splitter=re.split('\|+', filecontents)
-
-                                   name=splitter[0]
-                                   url=splitter[1]
-                                   mode=int(splitter[2])
-                                   imdb_id=splitter[3]
-
-                                   #return the metadata dictionary  
-                                   meta=metaget.get_movie_meta(imdb_id)
-
-                                   if meta is None:
-                                        #add directories without meta
-                                        addDir(name,url,mode,'',delfromfav=True)
-
-                                   if meta is not None:
-                                        #add directories with meta
-                                        addDir(name,url,100,'',metainfo=meta,delfromfav=True,imdb='tt'+str(imdb_id))
-                              except:
-                                   print 'problem adding a movie favourites item'
-
-
+                         
 def URL_TYPE(url):
      #Check whether url is a tv episode list or movie/mirrorpage
      if url.startswith(iceurl+'ip'):
@@ -575,9 +600,9 @@ def ADD_TO_FAVOURITES(name,url,imdbnum):
 
           print 'NAME:',name,'URL:',url,'IMDB NUMBER:',imdbnum
 
-          #Delete HD 720p entry from filename. using name as filename makes favourites appear alphabetically.
-          adjustedname=re.sub(' \*HD 720p\*','', name)
-         
+          #encode the filename to the safe string
+          adjustedname=base64.urlsafe_b64encode(name)
+
           #Save the new favourite if it does not exist.
           NewFavFile=os.path.join(savepath,adjustedname+'.txt')
           if not os.path.exists(NewFavFile):
@@ -596,9 +621,10 @@ def ADD_TO_FAVOURITES(name,url,imdbnum):
 
      
 def DELETE_FROM_FAVOURITES(name,url):
-     #Deletes HD 720p entry from filename
-     name=re.sub(' \*HD 720p\*','', name)
-          
+
+     #encode the filename to the safe string
+     name=base64.urlsafe_b64encode(name)
+     
      favpath=os.path.join(translatedicedatapath,'Favourites')
 
      url_type=URL_TYPE(url)
@@ -896,7 +922,9 @@ def CLEANUP(name):
      
 def MOVIEINDEX(url):
 #Indexer for most things. (Not just movies.) 
-
+        #get settings
+        selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+          
         # set content type so library shows more views and info
         xbmcplugin.setContent(int(sys.argv[1]), 'movies')
 
@@ -956,6 +984,8 @@ def TVINDEX(url):
 
 def TVSEASONS(url):
 # displays by seasons. pays attention to settings.
+        #get settings
+        selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
 
         FlattenSingleSeasons = selfAddon.getSetting('flatten-single-season')
         source=GetURL(url)
@@ -1025,7 +1055,8 @@ def LOADMIRRORS(url):
      mediapathfile=handle_file('mediapath','')
      
      
-     #---------------Save metadata on page to files, for use when playing.
+     #---------------Begin phantom metadata getting--------
+     #Save metadata on page to files, for use when playing.
      # Also used for creating the download directory structures.
      
      try:
@@ -1101,7 +1132,7 @@ def LOADMIRRORS(url):
           
           save(mediapathfile,'Movies/'+namematch[0])
 
-     #---------------End metadata stuff --------------
+     #---------------End phantom metadata getting stuff --------------
 
      match=re.compile('/membersonly/components/com_iceplayer/(.+?)" width=').findall(link)
      match[0]=re.sub('%29',')',match[0])
@@ -1179,6 +1210,9 @@ def GETMIRRORS(url,link):
 # It also displays them in an informative fashion to user.
 # Displays in three directory levels: HD / DVDRip etc , Source, PART
 
+     #get settings
+     selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+          
      #hacky method -- save page source to file
      mirrorfile=handle_file('mirror','')
      save(mirrorfile, link)
@@ -1313,6 +1347,9 @@ def PART(scrap,sourcenumber,hide2shared,megapic,shared2pic):
 
 def SOURCE(scrape):
 #check for sources containing multiple parts or just one part
+          #get settings
+          selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+          
           hide2shared = selfAddon.getSetting('hide-2shared')
           megapic=handle_file('megapic','')
           shared2pic=handle_file('shared2pic','')
@@ -1419,26 +1456,7 @@ def SHARED2_HANDLER(url):
           #dirlink=re.compile("window.location ='(.+?)';").findall(link)
           #for surl in dirlink:
           #    return surl
-                
 
-#def VIDEOLINKSWITHFILENAME(url):
-# loads megaupload page and scrapes and adds videolink, and name of uploaded file from it
-#        link=GetURL(url)
-#        avimatch=re.compile('id="downloadlink"><a href="(.+?).avi" class=').findall(link)
-#        for url in avimatch:
-#                fullurl=url+'.avi'                          
-#                #get filname
-#                matchy=re.compile('id="downloadlink"><a href=".+?megaupload.com/files/.+?/(.+?).avi" class=').findall(link)
-#                for urlfilename in matchy:
-#                        addLink('VideoFile | '+urlfilename,fullurl,'')
-#        #pretend to XBMC that divx is avi
-#        match1=re.compile('id="downloadlink"><a href="(.+?).divx" class=').findall(link)
-#        for surl in match1:
-#                sullurl=surl+'.avi'
-#                #get filename
-#                matchy=re.compile('id="downloadlink"><a href=".+?megaupload.com/files/.+?/(.+?).divx" class=').findall(link)
-#                for urlfilename in matchy:
-#                        addLink('VideoFile | '+urlfilename,sullurl,'')
         
 def GetURL(url):
      #print 'processing url: '+url
@@ -1458,6 +1476,9 @@ def WaitIf():
                 xbmc.Player().stop()
 
 def Get_Path(srcname,vidname):
+     #get settings
+     selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+          
      #get path for download
      mypath=os.path.normpath(str(selfAddon.getSetting('download-folder')))
 
@@ -1517,57 +1538,47 @@ def Item_Meta(name):
 
 
 def do_wait(account):
-      if account is not 'premium':           
-            pDialog = xbmcgui.DialogProgress()
-            ret = pDialog.create('Megaupload', 'Waiting for link to become active...')
 
-            if account == 'none':
-                print 'no account: waiting 46 secs'
-                secs=0
-                percent=0
-                totalsecs=50
-                while secs < totalsecs: 
-                    secs = secs + 1
-                    if secs > 4:
-                        percent=(secs * 2)+8
-                    else:
-                        if secs == 1:
-                            percent = 3
-                        if secs == 2:
-                            percent = 7
-                        if secs == 3:
-                            percent = 11
-                        if secs == 4:
-                            percent = 15
-                    secs_to_wait=str((totalsecs - secs)+1)+' Seconds to wait...'
-                    pDialog.update(percent, secs_to_wait)
-                    xbmc.sleep(1000)
-                print 'done waiting'
-                return 'done'
+     if account == 'premium':
+          return handle_wait(2,'Megaupload','Loading video with your *Premium* account.')
 
-            if account == 'free':
-                print 'free account: waiting 26 secs'
-                secs=0
-                percent=0
-                totalsecs=30
-                while secs < totalsecs: 
-                    secs = secs + 1
-                    if secs < 25:
-                        percent = secs * 4
-                    else:
-                        percent = 99
+     elif account == 'free':
+          return handle_wait(26,'Megaupload Free User','Loading video with your free account.')
 
-                    secs_to_wait=str((totalsecs - secs)+1)+' Seconds to wait...'
+     elif account == 'none':
+          return handle_wait(46,'Megaupload','Loading video.')
+    
 
-                    pDialog.update(percent, secs_to_wait)
-                    xbmc.sleep(1000)
-                print 'done waiting'
-               
-      elif account is 'premium':
-          xbmc.sleep(3000)
-          print 'premium account: waiting 3 secs'
 
-     
+def handle_wait(time_to_wait,title,text):
+
+    print 'waiting '+str(time_to_wait)+' secs'    
+
+    pDialog = xbmcgui.DialogProgress()
+    ret = pDialog.create(' '+title)
+
+    secs=0
+    percent=0
+    increment = int(100 / time_to_wait)
+
+    cancelled = False
+    while secs < time_to_wait:
+        secs = secs + 1
+        percent = increment*secs
+        secs_left = str((time_to_wait - secs))
+        remaining_display = ' Wait '+secs_left+' seconds for the video stream to activate...'
+        pDialog.update(percent,' '+text,remaining_display)
+        xbmc.sleep(1000)
+        if (pDialog.iscanceled()):
+             cancelled = True
+             break
+    if cancelled == True:     
+         print 'wait cancelled'
+         return False
+    else:
+         print 'done waiting'
+         return True
+
 def Handle_Vidlink(url):
      #video link preflight, pays attention to settings / checks if url is mega or 2shared
      ismega = re.search('.megaupload.com/', url)
@@ -1579,9 +1590,12 @@ def Handle_Vidlink(url):
           mu=megaroutines.megaupload(translatedicedatapath)
           link=mu.resolve_megaup(url)
 
-          do_wait(link[3])
+          finished = do_wait(link[3])
 
-          return link
+          if finished == True:
+               return link
+          else:
+               return None
 
      elif is2shared is not None:
           return False
@@ -1644,6 +1658,9 @@ class StopDownloading(Exception):
             return repr(self.value)
           
 def Download(url, dest, displayname=False):
+        #get settings
+        selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+          
         if displayname == False:
              displayname=url
         DeleteIncomplete=selfAddon.getSetting('delete-incomplete-downloads')
@@ -1756,9 +1773,11 @@ def addExecute(name,url,mode,iconimage):
 
 def cleanUnicode(string):   
     try:
-         string = unicodedata.normalize('NFKD', string).encode('ascii','ignore')
+         fixed_string = unicodedata.normalize('NFKD', string).encode('ascii','ignore')
+         print 'THE STRING:',fixed_string
+         return fixed_string
     except:
-         return string 
+         return str(string)
 
 def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=False, total=False, disablefav=False):
     meta = metainfo
@@ -1782,11 +1801,11 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
         liz = xbmcgui.ListItem(name, iconImage=str(meta['cover_url']), thumbnailImage=str(meta['cover_url']))
         liz.setInfo(type="Video",
                     infoLabels={'title':str(name),
-                    'plot':str(plotmeta),
-                    'genre':meta['genres'],
+                    'plot':plotmeta,
+                    'genre':str(meta['genres']),
                     'duration':str(meta['duration']),
-                    'premiered':meta['premiered'],
-                    'studio':meta['studios'],
+                    'premiered':str(meta['premiered']),
+                    'studio':str(meta['studios']),
                     'mpaa':str(meta['mpaa']),
                     'trailer':"plugin://plugin.video.youtube/?action=play_video&videoid=%s" % str(meta['trailer_url'])[str(meta['trailer_url']).rfind("v=")+2:],
                     'code':str(meta['imdb_id']),
