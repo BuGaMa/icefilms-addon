@@ -1797,26 +1797,35 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
         liz.setInfo(type="Video", infoLabels={"Title": name})
 
     if meta is not False:
-        plotmeta = cleanUnicode(meta['plot'])
-        liz = xbmcgui.ListItem(name, iconImage=str(meta['cover_url']), thumbnailImage=str(meta['cover_url']))
-        liz.setInfo(type="Video",
-                    infoLabels={'title':str(name),
-                    'plot':plotmeta,
-                    'genre':str(meta['genres']),
-                    'duration':str(meta['duration']),
-                    'premiered':str(meta['premiered']),
-                    'studio':str(meta['studios']),
-                    'mpaa':str(meta['mpaa']),
-                    'trailer':"plugin://plugin.video.youtube/?action=play_video&videoid=%s" % str(meta['trailer_url'])[str(meta['trailer_url']).rfind("v=")+2:],
-                    'code':str(meta['imdb_id']),
-                    'rating':float(meta['rating'])})
+	#dont do unicode cleanup here. do it where the data is actually loaded from tmdb.
+        #plotmeta = cleanUnicode(meta['plot'])
+        liz = xbmcgui.ListItem(name, iconImage=meta['cover_url'], thumbnailImage=meta['cover_url'])
+
+	infoLabels = {}
+        infoLabels['title'] = name
+        infoLabels['plot'] = meta['plot']
+        infoLabels['genre'] = meta['genres']
+        infoLabels['duration'] = meta['duration']
+        infoLabels['premiered'] = meta['premiered']
+        infoLabels['studio'] = meta['studios']
+        infoLabels['mpaa'] = meta['mpaa']
+        infoLabels['code'] = meta['imdb_id']
+        infoLabels['rating'] = meta['rating']
+
+        try:
+                trailer_id = re.match('^[^v]+v=(.{11}).*', meta['trailer_url']).group(1)
+                infoLabels['trailer'] = "plugin://plugin.video.youtube/?action=play_video&videoid=%s" % trailer_id
+        except:
+                infoLabels['trailer'] = ''
+
+        liz.setInfo(type="Video", infoLabels=infoLabels)
 
     ########
     #handle adding context menus
     contextMenuItems = []
 
     # add/delete favourite
-    if disablefav==False: # disable fav is necessary for the scrapes in the homepage category.
+    if disablefav is False: # disable fav is necessary for the scrapes in the homepage category.
                 
         if delfromfav is True:
             #settings for when in the Favourites folder
