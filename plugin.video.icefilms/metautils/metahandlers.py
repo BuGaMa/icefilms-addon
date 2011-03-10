@@ -96,12 +96,13 @@ def GetURL(url):
      response.close()
      return link
 
-def cleanUnicode(string):
-    #try:
-    #    string = string.replace("'","").replace(unicode(u'\u201c'), '"').replace(unicode(u'\u201d'), '"').replace(unicode(u'\u2019'),'').replace(unicode(u'\u2026'),'...').replace(unicode(u'\u2018'),'').replace(unicode(u'\u2013'),'-')
-    #    return string
-    #except:
-        return string    
+def cleanUnicode(string):   
+    try:
+         fixed_string = unicodedata.normalize('NFKD', string).encode('ascii','ignore')
+         #print 'THE STRING:',fixed_string
+         return fixed_string
+    except:
+         return string
 
 class MetaContainer:       
 
@@ -449,7 +450,7 @@ class MovieMetaData:
                         #if not os.path.exists(backdrop_path):
                         #        self._downloadimages(meta,'movies',imdb_id)
 
-            
+        meta['plot']=cleanUnicode(meta['plot'])    
         #Return the values to XBMC
         return meta
     

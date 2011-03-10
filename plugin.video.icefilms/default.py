@@ -1,16 +1,18 @@
 #!/usr/bin/python
 
-#Icefilms.info v1.0.4 - anarchintosh / daledude 4/3/2011
+#Icefilms.info v1.0.5 - anarchintosh / daledude 10/3/2011
 
 # Quite convoluted code. Needs a good cleanup for v1.1.0
 
+#standard module imports
 import sys,os
 import time,re
 import urllib,urllib2,cookielib,base64
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon
 import unicodedata
 
-import clean_dirs
+#stuff bundled with addon imports
+import clean_dirs,htmlcleaner
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
 from mega import megaroutines
@@ -775,11 +777,27 @@ def CLEANSEARCH(name):
         name=re.sub('-icefilms','',name)
         name=re.sub('icefilms','',name)
         name=re.sub('DivX','',name)
-        name=re.sub('&#39;',"'",name)
-        name=re.sub('&amp;','&',name)
         name=re.sub('-  Episode  List','- Episode List',name)
         name=re.sub('-Episode  List','- Episode List',name)
+        #name=re.sub('&#39;',"'",name)
+        #name=re.sub('&amp;','&',name)
         return name
+
+def CLEANUP(name):
+# clean names of annoying garbled text
+          name=re.sub('</a>','',name)
+          name=re.sub('<b>HD</b>',' *HD*',name)
+          #name=re.sub('&#xF4;','o',name)
+          #name=re.sub('&#xE9;',"e",name)
+          #name=re.sub('&#xEB;',"e",name)
+          #name=re.sub('&#xC6;','AE',name)
+          #name=re.sub('&#x27;',"'",name)
+          #name=re.sub('&#xED;','i',name)
+          #name=re.sub('&frac12;',' 1/2',name)
+          #name=re.sub('&#xBD;',' 1/2',name)
+          #name=re.sub('&#x26;','&',name)
+          #name=re.sub('&#x22;','',name)
+          return name
 
 def TVCATEGORIES(url):
         caturl = iceurl+'tv/'        
@@ -899,26 +917,8 @@ def TVA2ZDirectories(url):
         #Generate A-Z list and add directories for all letters.
         A2Z=[chr(i) for i in xrange(ord('A'), ord('Z')+1)]
         for theletter in A2Z:
-             addDir (theletter,caturl+theletter,setmode,os.path.join(art,'letters',theletter+'.png')) 
-        
-
-
-def CLEANUP(name):
-# clean names of annoying garbled text
-          name=re.sub('&#xC6;','AE',name)
-          name=re.sub('&#x27;',"'",name)
-          name=re.sub('&#xED;','i',name)
-          name=re.sub('&frac12;',' 1/2',name)
-          name=re.sub('&#xBD;',' 1/2',name)
-          name=re.sub('&#x26;','&',name)
-          name=re.sub('&#x22;','',name)
-          name=re.sub('</a>','',name)
-          name=re.sub('<b>HD</b>',' *HD 720p*',name)
-          name=re.sub('&#xF4;','o',name)
-          name=re.sub('&#xE9;',"e",name)
-          name=re.sub('&#xEB;',"e",name)
-          return name
-
+             addDir (theletter,caturl+theletter,setmode,os.path.join(art,'letters',theletter+'.png'))
+             
      
 def MOVIEINDEX(url):
 #Indexer for most things. (Not just movies.) 
@@ -1056,6 +1056,7 @@ def LOADMIRRORS(url):
      
      
      #---------------Begin phantom metadata getting--------
+
      #Save metadata on page to files, for use when playing.
      # Also used for creating the download directory structures.
      
@@ -1514,13 +1515,17 @@ def Get_Path(srcname,vidname):
      else:
           return 'path not set'
 
-def Item_Meta(name):
-          #set name as metadata, for selected source
-          vidname=handle_file('videoname','open')
 
+def Item_Meta(name):
+          #set metadata, for selected source. this is done from 'phantom meta'.
+          # ie, meta saved earlier when we loaded the mirror page.
+
+          #set name and description, unicode cleaned.
+          vidname=htmlcleaner.clean(handle_file('videoname','open'))
+          description=htmlcleaner.clean(handle_file('description','open'))
+          
           #set other metadata strings from strings saved earlier
           poster=handle_file('poster','open')
-          description=handle_file('description','open')
           mpaafile=handle_file('mpaa','')
           
           #srcname=handle_file('sourcename','open')
@@ -1762,7 +1767,7 @@ def addExecute(name,url,mode,iconimage):
     contextMenuItems = []
 
     contextMenuItems.append(('Download', 'XBMC.RunPlugin(%s?mode=201&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
-    contextMenuItems.append( ( "Download with jDownloader", "XBMC.RunPlugin(plugin://plugin.program.jdownloader/?action=addlink&url=%s)" % ( sysurl )) )
+    contextMenuItems.append(('Download with jDownloader', 'XBMC.RunPlugin(plugin://plugin.program.jdownloader/?action=addlink&url=%s)' % (sysurl)))
     contextMenuItems.append(('Check Mega Limits', 'XBMC.RunPlugin(%s?mode=202&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
     contextMenuItems.append(('Kill Streams', 'XBMC.RunPlugin(%s?mode=203&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
 
@@ -1771,13 +1776,6 @@ def addExecute(name,url,mode,iconimage):
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=False)
     return ok
 
-def cleanUnicode(string):   
-    try:
-         fixed_string = unicodedata.normalize('NFKD', string).encode('ascii','ignore')
-         print 'THE STRING:',fixed_string
-         return fixed_string
-    except:
-         return str(string)
 
 def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=False, total=False, disablefav=False):
     meta = metainfo
@@ -1786,7 +1784,12 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
 
     #encode url and name, so they can pass through the sys.argv[0] related strings
     sysname = urllib.quote_plus(name)
-    sysurl = urllib.quote_plus(url)       
+    sysurl = urllib.quote_plus(url)
+
+    #get nice unicode name text.
+    #name has to pass through lots of weird operations earlier in the script,
+    #so it should only be unicodified just before it is displayed.
+    name = htmlcleaner.clean(name)
 
     u = sys.argv[0] + "?url=" + sysurl + "&mode=" + str(mode) + "&name=" + sysname
     ok = True
@@ -1796,9 +1799,7 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
         liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
         liz.setInfo(type="Video", infoLabels={"Title": name})
 
-    if meta is not False:
-	#dont do unicode cleanup here. do it where the data is actually loaded from tmdb.
-        #plotmeta = cleanUnicode(meta['plot'])
+    if meta is not False:    
         liz = xbmcgui.ListItem(name, iconImage=meta['cover_url'], thumbnailImage=meta['cover_url'])
 
 	infoLabels = {}

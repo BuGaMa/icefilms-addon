@@ -1,6 +1,6 @@
 '''
  _ ___ __  _   __  __    ____      ___ __ 
- /|/|(_  / _ /_| /__)/  )/  //  //| )(_  (   v0.2
+ /|/|(_  / _ /_| /__)/  )/  //  //| )(_  (   v0.3 Final -- Deprecated by videourlresolver
 /   |/__(__)(  |/ ( (__/(__/(  (/ |/ /____)  Copyleft Anarchintosh.
 
 Python link resolver for megaupload.
@@ -13,7 +13,7 @@ Credits: Thank you Coolblaze,Voinage and PGuedes for the megavideo code.
 '''
 
 import re,sys,os,os.path
-import urlparse,urllib,urllib2,cookielib,mechanize
+import urllib,urllib2,cookielib
 
 def openfile(filename):
      fh = open(filename, 'r')
@@ -260,67 +260,63 @@ def Do_Login(self,megauser=False,megapass=False):
           pass
      
      if megauser is not False or megapass is not False:
-               # Browser
-               br = mechanize.Browser()
-
-               # Cookie Jar
-               cj = cookielib.LWPCookieJar()
-               br.set_cookiejar(cj)
-
-               # Browser options
-               br.set_handle_equiv(True)
-               br.set_handle_gzip(True)
-               br.set_handle_redirect(True)
-               br.set_handle_referer(True)
-               br.set_handle_robots(False)
-
-               # Follows refresh 0 but not hangs on refresh > 0
-               br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
-
-               # User-Agent
-               br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
-
-
-               # The site we will navigate into, handling it's session
-               if self.class_name is 'megaupload':
-                    siteurl='http://www.megaupload.com/?c=login'
-
-               elif self.class_name is 'megavideo':
-                    siteurl='http://www.megavideo.com/?c=login'
-
-               elif self.class_name is 'megaporn':
-                    siteurl='http://www.megaporn.com/?c=login'
-
-               elif self.class_name is 'megapornvid':
-                    siteurl='http://www.megaporn.com/?c=login'
-                    
-               br.open(siteurl)
                
 
-               # Select the first (index zero) form
-               br.select_form('loginfrm')
+# --------------- Begin dirty backport of the new non-mechanize login code. ----------------
+# backported from videourlresolver megaupload resolver
 
-               #User credentials
-               br.form['username'] = megauser
-               br.form['password'] = megapass
-               br.submit()
+               newlogin = __doLogin('http://www.megaupload.com/',self.cookie,megauser,megapass)
 
-               #check if login worked
-               loginerror="Username and password do not match" in br.response().read()
-               if loginerror == True:
-                    return False
+               if newlogin is not None:
+                    return True
+                    
+               elif newlogin is None:
                     try:
                          os.remove(self.loginfile)
                     except:
                          pass
-                    try:
-                         os.remove(self.cookie)
-                    except:
-                         pass
-               elif loginerror == False:
-                    cj.save(self.cookie)
-                    return True
+                    return False
                     
+def __doLogin(baseurl, cookiepath, username, password):
+
+		#build the login code, from user, pass, baseurl and cookie
+		login_data = urllib.urlencode({'username' : username, 'password' : password, 'login' : 1, 'redir' : 1})	
+		req = urllib2.Request(baseurl + '?c=login', login_data)
+		req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+		cj = cookielib.LWPCookieJar()
+		opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+
+		#do the login and get the response
+		response = opener.open(req)
+		source = response.read()
+		response.close()
+
+		login = new_check_login(source)
+
+		if login == 'free' or login == 'premium':
+			cj.save(cookiepath)
+
+                        return login
+                else:
+                        return None
+
+def new_check_login(source):
+		#feed me some megaupload page source
+		#returns 'free' or 'premium' if logged in
+		#returns 'none' if not logged in
+
+		login = re.search('Welcome', source)
+		premium = re.search('flashvars.status = "premium";', source)		
+
+		if login is not None:
+			if premium is not None:
+				return 'premium'
+			elif premium is None:
+				return 'free'
+		elif login is None:
+			return None
+
+# --------------- End dirty backport of the new non-mechanize login code. ----------------
 
 def GetURL(url,self=False,disable_cookies=False):
      #print 'processing url: '+url
