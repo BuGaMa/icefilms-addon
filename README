@@ -1,12 +1,6 @@
 Addon also requires: 
 script.module.simplejson-2.0.10.zip
-script.module.mechanize
-These should be installed automatically when stable release is installed from googlecode repository.
+This should be installed automatically when stable release is installed from googlecode repository.
 You can also get them from http://code.google.com/p/anarchintosh-projects/downloads/list
 
-This repo should only ever contain stable versions of the megaroutines script.
-Use the link below for megaroutines dev:
-https://github.com/icefilms-xbmc/megaroutines
-
-v1.0.0 has been finalised. Metacontainers and metacontainer handlers have been fully updated and tested.
-It will now self-install the metacontainers when first run.
+Megaroutines is scheduled to be replaced with videourlresolver module, when it is stable.
