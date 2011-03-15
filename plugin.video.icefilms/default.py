@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#Icefilms.info v1.0.5 - anarchintosh / daledude 10/3/2011
+#Icefilms.info v1.0.6 - anarchintosh / daledude / westcoast13 15/3/2011
 
 # Quite convoluted code. Needs a good cleanup for v1.1.0
 
@@ -11,7 +11,7 @@ import urllib,urllib2,cookielib,base64
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon
 import unicodedata
 
-#stuff bundled with addon imports
+#imports of things bundled with addon
 import clean_dirs,htmlcleaner
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
@@ -59,7 +59,6 @@ transdowninfopath = xbmcpath(downinfopath,'')
 transmetapath = xbmcpath(metapath,'')
 translatedicedatapath = xbmcpath(icedatapath,'')
 art = icepath+'/resources/art'
-
 
 def handle_file(filename,getmode=''):
      #bad python code to add a get file routine.
@@ -1262,13 +1261,13 @@ def GETMIRRORS(url,link):
                 
 def addCatDir(url,dvdrip,hd720p,dvdscreener,r5r6):
         if dvdrip == 1:
-                addDir('DVDRip',url,101,'')
+                addDir('DVDRip',url,101,os.path.join(art,'source_types','dvd.png'))
         if hd720p == 1:
-                addDir('HD 720p',url,102,'')
+                addDir('HD 720p',url,102,os.path.join(art,'source_types','hd720p.png'))
         if dvdscreener == 1:
-                addDir('DVD Screener',url,103,'')
+                addDir('DVD Screener',url,103,os.path.join(art,'source_types','dvdscreener.png'))
         if r5r6 == 1:
-                addDir('R5/R6 DVDRip',url,104,'') 
+                addDir('R5/R6 DVDRip',url,104,os.path.join(art,'source_types','r5r6.png')) 
 
 def Add_Multi_Parts(name,url,icon):
      #StackMulti = selfAddon.getSetting('stack-multi-part')
@@ -1519,23 +1518,47 @@ def Get_Path(srcname,vidname):
 def Item_Meta(name):
           #set metadata, for selected source. this is done from 'phantom meta'.
           # ie, meta saved earlier when we loaded the mirror page.
+          # very important that things are contained within try blocks, because streaming will fail if something in this function fails.
 
           #set name and description, unicode cleaned.
-          vidname=htmlcleaner.clean(handle_file('videoname','open'))
-          description=htmlcleaner.clean(handle_file('description','open'))
+          try: open_vidname=handle_file('videoname','open')
+          except:
+               vidname = ''
+               print 'OPENING VIDNAME FAILED!'
+          else:
+               try: get_vidname = htmlcleaner.clean(open_vidname)
+               except:
+                    print 'CLEANING VIDNAME FAILED! :',open_vidname
+                    vidname = open_vidname
+               else: vidname = get_vidname
+
+          try: open_desc=handle_file('description','open')
+          except:
+               description = ''
+               print 'OPENING DESCRIPTION FAILED!'
+          else:
+               try: get_desc = htmlcleaner.clean(open_desc)
+               except:
+                    print 'CLEANING DESCRIPTION FAILED! :',open_desc
+                    description = open_desc
+               else: description = get_desc
           
           #set other metadata strings from strings saved earlier
-          poster=handle_file('poster','open')
-          mpaafile=handle_file('mpaa','')
+          try: get_poster=handle_file('poster','open')
+          except: poster = ''
+          else: poster = get_poster
+
+          try: get_mpaa=handle_file('mpaa','open')
+          except: mpaa = None
+          else: mpaa = get_mpaa
           
           #srcname=handle_file('sourcename','open')
           srcname=name
 
           listitem = xbmcgui.ListItem(srcname)
-          if not os.path.exists(mpaafile):
+          if not mpaa:
                listitem.setInfo('video', {'Title': vidname, 'plotoutline': description, 'plot': description})
-          if os.path.exists(mpaafile):
-               mpaa=openfile(mpaafile)
+          if mpaa:
                listitem.setInfo('video', {'Title': vidname, 'plotoutline': description, 'plot': description, 'mpaa': mpaa})
           listitem.setThumbnailImage(poster)
 
@@ -1545,7 +1568,7 @@ def Item_Meta(name):
 def do_wait(account):
 
      if account == 'premium':
-          return handle_wait(2,'Megaupload','Loading video with your *Premium* account.')
+          return handle_wait(1,'Megaupload','Loading video with your *Premium* account.')
 
      elif account == 'free':
           return handle_wait(26,'Megaupload Free User','Loading video with your free account.')

@@ -1,3 +1,7 @@
+v1.0.6 (Tuesday, 15 March 2011):
+  - added source type art
+  - failures of phantom meta getters no longer impede streaming
+
 v1.0.5 (Thursday, 10 March 2011):
   - fixed unicode errors
   - fixed weird characters

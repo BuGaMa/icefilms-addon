@@ -12,7 +12,7 @@ Credits: Thank you Coolblaze,Voinage and PGuedes for the megavideo code.
          http://stackoverflow.com/questions/4422389/use-mechanize-to-log-into-megaupload
 '''
 
-import re,sys,os,os.path
+import re,sys,os
 import urllib,urllib2,cookielib
 
 def openfile(filename):
