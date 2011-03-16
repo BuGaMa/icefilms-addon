@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-#Icefilms.info v1.0.6 - anarchintosh / daledude / westcoast13 15/3/2011
+#Icefilms.info v1.1.0 Draft - anarchintosh / daledude / westcoast13 15/3/2011
 
-# Quite convoluted code. Needs a good cleanup for v1.1.0
+# Quite convoluted code. Needs a good cleanup.
 
 #standard module imports
 import sys,os
@@ -11,13 +11,17 @@ import urllib,urllib2,cookielib,base64
 import xbmc,xbmcplugin,xbmcgui,xbmcaddon
 import unicodedata
 
-#imports of things bundled with addon
-import clean_dirs,htmlcleaner
+#get path to me
+icepath=os.getcwd()
+
+#append lib directory
+sys.path.append( os.path.join( icepath, 'resources', 'lib' ) )
+
+#imports of things bundled in the addon
+import container_urls,clean_dirs,htmlcleaner,megaroutines
+from metautils import metahandlers
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
-from mega import megaroutines
-from metautils import metahandlers
-
 
 def xbmcpath(path,filename):
      translatedpath = os.path.join(xbmc.translatePath( path ), ''+filename+'')
@@ -48,10 +52,7 @@ def Notify(typeq,title,message,times):
           dialog = xbmcgui.Dialog()
           dialog.ok(' '+title+' ', ' '+message+' ')
 
-#get path to me
-icepath=os.getcwd()
-
-#paths etc need sorting out. do for v1.1.0
+#paths etc need sorting out.
 icedatapath = 'special://profile/addon_data/plugin.video.icefilms'
 metapath = icedatapath+'/mirror_page_meta_cache'
 downinfopath = icedatapath+'/downloadinfologs'
@@ -258,33 +259,18 @@ def ContainerStartup(selfAddon):
      #Quick hack for v1.0.0 --- only run if meta_caches does not exist
      if not os.path.exists(metapath):
 
+          #get containers dict from container_urls.py
+          containers = container_urls.get()
           
-
-          #Movie Meta Container Strings
-          mv_date='9/Feb/2011'          
-          mv_db='http://www.megaupload.com/?d=U1RTPGQS'
-          mv_base='http://www.megaupload.com/?d=CE07S1EJ'
-          mv_db_base_size=230
-          mv_additional=''
-          mv_additional_size=0
-
-          #TV Meta Container Strings
-          tv_date=''
-          tv_db=''
-          tv_base=''
-          tv_db_base_size=0
-          tv_additional=''
-          tv_additional_size=0
-
           #Offer to download the metadata
      
           dialog = xbmcgui.Dialog()
-          ret = dialog.yesno('Download Meta Containers '+mv_date+' ?', 'There is a metadata container avaliable.','Install it to get images and info for movies.', 'Would you like to get it? Its a large '+str(mv_db_base_size)+'MB download.','Remind me later', 'Install')
+          ret = dialog.yesno('Download Meta Containers '+str(containers['date'])+' ?', 'There is a metadata container avaliable.','Install it to get images and info for videos.', 'Would you like to get it? Its a large '+str(containers['mv_db_base_size'])+'MB download.','Remind me later', 'Install')
           if ret==True:
                  
                #download dem files
-               get_db_zip=Zip_DL_and_Install(mv_db,'themoviedb','database')
-               get_cover_zip=Zip_DL_and_Install(mv_base,'themoviedb','covers')
+               get_db_zip=Zip_DL_and_Install(containers['mv_db_url'],'themoviedb','database')
+               get_cover_zip=Zip_DL_and_Install(containers['mv_covers_url'],'themoviedb','covers')
 
                #do nice notification
                if get_db_zip==True and get_cover_zip==True:
@@ -294,6 +280,7 @@ def ContainerStartup(selfAddon):
 
 
 def Zip_DL_and_Install(url,dbtype,installtype):
+               url = str(url)
 
                #define dl directory
                dlzips=os.path.join(translatedicedatapath,'downloaded meta zips')

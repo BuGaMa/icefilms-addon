@@ -20,7 +20,7 @@
     <type>8</type>
 
     <!-- (required) Title -->
-    <title>Icefilms</title>
+    <title>Icefilms.info</title>
 
     <!-- (required) Major.minor.build -->
     <version>1.0.6</version>
@@ -28,14 +28,14 @@
     <!-- (required) author name & email.  at least one author name is required -->
     <authors>
         <author name="anarchintosh" email="j48antialias@gmail.com" />
-        <author name="daledude" email="daledude@gmail.com" />
+        <author name="daledude" email="dale.dewd@gmail.com" />
     </authors>
 
     <!-- (required) Short description of addon. -->
-    <summary>Stream and download scene releases from the megaupload links listed on Icefilms.info</summary>
+    <summary>Stream and download from Icefilms.info links</summary>
 
     <!-- Longer descrption of addon.  Usage instructions should go here if required. -->
-    <description>Turns your XBMC into an instant free on-demand media-center. Stream and download to your library pure .avi scene releases, in DVD and HD720p quality. Browse and search the library of over 77,000 videos with metadata and posters. Never experience the frustration of dead video links!</description>
+    <description>Turns your XBMC into an instant free on-demand media-center. Stream and download to your library pure .avi scene releases, in DVDRip and HD720p quality. Browse and search the library of over 77,000 videos with metadata and posters. Never experience the frustration of dead video links!</description>
 
     <!-- user defined tags e.g. <tags><tag>Example</tag></tags> -->
     <tags>
