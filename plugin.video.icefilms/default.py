@@ -62,67 +62,73 @@ translatedicedatapath = xbmcpath(icedatapath,'')
 art = icepath+'/resources/art'
 
 def handle_file(filename,getmode=''):
-     #bad python code to add a get file routine.
-     if filename is 'captcha':
-          return_file = xbmcpath(icedatapath,'CaptchaChallenge.txt')
-     elif filename is 'mirror':
-          return_file = xbmcpath(icedatapath,'MirrorPageSource.txt')
-     elif filename is 'episodesrc':
-          return_file = xbmcpath(icedatapath,'EpisodePageSource.txt')
-     elif filename is 'pageurl':
-          return_file = xbmcpath(icedatapath,'PageURL.txt')
+    #bad python code to add a get file routine.
+    if filename is 'captcha':
+        return_file = xbmcpath(icedatapath,'CaptchaChallenge.txt')
+    elif filename is 'mirror':
+        return_file = xbmcpath(icedatapath,'MirrorPageSource.txt')
+    elif filename is 'episodesrc':
+        return_file = xbmcpath(icedatapath,'EpisodePageSource.txt')
+    elif filename is 'pageurl':
+        return_file = xbmcpath(icedatapath,'PageURL.txt')
+    
+    elif filename is 'mediapath':
+        return_file = xbmcpath(downinfopath,'MediaPath.txt')
+    #extra thing to provide show name with year if going via episode list.
+    elif filename is 'mediatvshowname':
+        return_file = xbmcpath(downinfopath,'TVShowName.txt')
+    #extra thing to provide season name.
+    elif filename is 'mediatvseasonname':
+        return_file = xbmcpath(downinfopath,'TVSeasonName.txt')
+    
+    elif filename is 'videoname':
+        return_file = xbmcpath(metapath,'VideoName.txt')
+    elif filename is 'sourcename':
+        return_file = xbmcpath(metapath,'SourceName.txt')
+    elif filename is 'description':
+        return_file = xbmcpath(metapath,'Description.txt')
+    elif filename is 'poster':
+        return_file = xbmcpath(metapath,'Poster.txt')
+    elif filename is 'mpaa':
+        return_file = xbmcpath(metapath,'mpaa.txt')
+    elif filename is 'listpic':
+        return_file = xbmcpath(metapath,'listpic.txt')
+    
+    elif filename is 'smallicon':
+        return_file = xbmcpath(art,'smalltransparent2.png')
+    elif filename is 'homepage':
+        return_file = xbmcpath(art,'homepage.png')
+    elif filename is 'movies':
+        return_file = xbmcpath(art,'movies.png')
+    elif filename is 'music':
+        return_file = xbmcpath(art,'music.png')
+    elif filename is 'tvshows':
+        return_file = xbmcpath(art,'tvshows.png')
+    elif filename is 'movies_fav':
+        return_file = xbmcpath(art,'movies_fav.png')
+    elif filename is 'tvshows_fav':
+        return_file = xbmcpath(art,'tvshows_fav.png')
+    elif filename is 'other':
+        return_file = xbmcpath(art,'other.png')
+    elif filename is 'search':
+        return_file = xbmcpath(art,'search.png')
+    elif filename is 'standup':
+        return_file = xbmcpath(art,'standup.png')
+    elif filename is 'megapic':
+        return_file = xbmcpath(art,'megaupload.png')
+    elif filename is 'shared2pic':
+        return_file = xbmcpath(art,'2shared.png')
+    elif filename is 'localpic':
+        return_file = xbmcpath(art,'local_file.jpg')
 
-     elif filename is 'mediapath':
-          return_file = xbmcpath(downinfopath,'MediaPath.txt')
-     #extra thing to provide show name with year if going via episode list.
-     elif filename is 'mediatvshowname':
-          return_file = xbmcpath(downinfopath,'TVShowName.txt')
-     #extra thing to provide season name.
-     elif filename is 'mediatvseasonname':
-          return_file = xbmcpath(downinfopath,'TVSeasonName.txt')
-
-     elif filename is 'videoname':
-          return_file = xbmcpath(metapath,'VideoName.txt')
-     elif filename is 'sourcename':
-          return_file = xbmcpath(metapath,'SourceName.txt')
-     elif filename is 'description':
-          return_file = xbmcpath(metapath,'Description.txt')
-     elif filename is 'poster':
-          return_file = xbmcpath(metapath,'Poster.txt')
-     elif filename is 'mpaa':
-          return_file = xbmcpath(metapath,'mpaa.txt')
-     elif filename is 'listpic':
-          return_file = xbmcpath(metapath,'listpic.txt')
-
-     elif filename is 'smallicon':
-          return_file = xbmcpath(art,'smalltransparent2.png')
-     elif filename is 'homepage':
-          return_file = xbmcpath(art,'homepage.png')
-     elif filename is 'movies':
-          return_file = xbmcpath(art,'movies.png')
-     elif filename is 'music':
-          return_file = xbmcpath(art,'music.png')
-     elif filename is 'tvshows':
-          return_file = xbmcpath(art,'tvshows.png')
-     elif filename is 'other':
-          return_file = xbmcpath(art,'other.png')
-     elif filename is 'search':
-          return_file = xbmcpath(art,'search.png')
-     elif filename is 'standup':
-          return_file = xbmcpath(art,'standup.png')
-     elif filename is 'megapic':
-          return_file = xbmcpath(art,'megaupload.png')
-     elif filename is 'shared2pic':
-          return_file = xbmcpath(art,'2shared.png')
-
-     if getmode is '':
-          return return_file
-     if getmode is 'open':
-          try:
-               opened_return_file=openfile(return_file)
-               return opened_return_file
-          except:
-               print 'opening failed'
+    if getmode is '':
+        return return_file
+    if getmode is 'open':
+        try:
+            opened_return_file=openfile(return_file)
+            return opened_return_file
+        except:
+            print 'opening failed'
      
 #useful global strings:
 iceurl = 'http://www.icefilms.info/'
@@ -1076,7 +1082,7 @@ def LOADMIRRORS(url):
                match4=re.compile('<img width=250 src=(.+?) style').findall(link)
                save(posterfile,match4[0])
           if imgcheck2 is not None:
-               match5=re.compile('/noref.php\?url=(.+?)>').findall(link)
+               match5=re.compile('/noref.php\?url=(.+?) width=').findall(link)
                save(posterfile,match5[0])
      except:
           pass
@@ -1197,52 +1203,62 @@ def GETMIRRORS(url,link):
 # It also displays them in an informative fashion to user.
 # Displays in three directory levels: HD / DVDRip etc , Source, PART
 
-     #get settings
-     selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
-          
-     #hacky method -- save page source to file
-     mirrorfile=handle_file('mirror','')
-     save(mirrorfile, link)
-
-     #check for the existence of categories, and set values.
-     if re.search('<div class=ripdiv><b>DVDRip / Standard Def</b>', link) is not None: dvdrip = 1
-     else: dvdrip = 0
+    #get settings
+    selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+         
+    #hacky method -- save page source to file
+    mirrorfile=handle_file('mirror','')
+    save(mirrorfile, link)
+    
+    #check for the existence of categories, and set values.
+    if re.search('<div class=ripdiv><b>DVDRip / Standard Def</b>', link) is not None: dvdrip = 1
+    else: dvdrip = 0
+    
+    if re.search('<div class=ripdiv><b>HD 720p</b>', link) is not None: hd720p = 1
+    else: hd720p = 0
+    
+    if re.search('<div class=ripdiv><b>DVD Screener</b>', link) is not None: dvdscreener = 1
+    else: dvdscreener = 0
+    
+    if re.search('<div class=ripdiv><b>R5/R6 DVDRip</b>', link) is not None: r5r6 = 1
+    else: r5r6 = 0
+    
+    FlattenSrcType = selfAddon.getSetting('flatten-source-type')        
      
-     if re.search('<div class=ripdiv><b>HD 720p</b>', link) is not None: hd720p = 1
-     else: hd720p = 0
-     
-     if re.search('<div class=ripdiv><b>DVD Screener</b>', link) is not None: dvdscreener = 1
-     else: dvdscreener = 0
-
-     if re.search('<div class=ripdiv><b>R5/R6 DVDRip</b>', link) is not None: r5r6 = 1
-     else: r5r6 = 0
-
-     FlattenSrcType = selfAddon.getSetting('flatten-source-type')        
-
-     #only detect and proceed directly to adding sources if flatten sources setting is true
-     if FlattenSrcType == 'true':
-
-          #add up total number of categories.
-          total = dvdrip + hd720p + dvdscreener + r5r6
-
-          #if there is only one category, skip to adding sources.
-          if total == 1:
-               if dvdrip == 1:
-                    DVDRip(url)
-               elif hd720p == 1:
-                    HD720p(url)
-               elif dvdscreener == 1:
-                    DVDScreener(url)
-               elif r5r6 == 1:
-                    R5R6(url)
-
-          #if there are multiple categories, add sub directories.
-          elif total > 1:
-               addCatDir(url,dvdrip,hd720p,dvdscreener,r5r6)
-
-     #if flattensources is set to false, don't flatten                
-     elif FlattenSrcType == 'false':
-          addCatDir(url,dvdrip,hd720p,dvdscreener,r5r6)
+    # Search if there is a local version of the file
+    #get proper name of vid
+    vidname=handle_file('videoname','open')
+    mypath=Get_Path(name,vidname)
+    print 'MYPATH: ',mypath
+    if mypath is not 'path not set':
+        if os.path.isfile(mypath) is True:
+            localpic=handle_file('localpic','')
+            addExecute('Source    | Local | Full',mypath,205,localpic)
+    
+    #only detect and proceed directly to adding sources if flatten sources setting is true
+    if FlattenSrcType == 'true':
+    
+         #add up total number of categories.
+         total = dvdrip + hd720p + dvdscreener + r5r6
+    
+         #if there is only one category, skip to adding sources.
+         if total == 1:
+              if dvdrip == 1:
+                   DVDRip(url)
+              elif hd720p == 1:
+                   HD720p(url)
+              elif dvdscreener == 1:
+                   DVDScreener(url)
+              elif r5r6 == 1:
+                   R5R6(url)
+    
+         #if there are multiple categories, add sub directories.
+         elif total > 1:
+              addCatDir(url,dvdrip,hd720p,dvdscreener,r5r6)
+    
+    #if flattensources is set to false, don't flatten                
+    elif FlattenSrcType == 'false':
+         addCatDir(url,dvdrip,hd720p,dvdscreener,r5r6)
 
 
                 
@@ -1462,6 +1478,13 @@ def WaitIf():
                #isice = re.search('.megaupload', currentvid)
                 xbmc.Player().stop()
 
+def cleanFilename(file):
+    #Clean filename of not os allowed characters (replace with '_'
+    file=file.replace(':','_').replace('<','_').replace('>','_').replace('*','_').replace('"','_').replace('|','_').replace('?','_')
+    print file
+    
+    return file
+
 def Get_Path(srcname,vidname):
      #get settings
      selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
@@ -1618,6 +1641,15 @@ def Handle_Vidlink(url):
           #shared2url=SHARED2_HANDLER(url)
           #return shared2url
 
+def PlayFile(name,url):
+    
+    listitem=Item_Meta(name)
+    print 'attempting to play local file'
+    try:
+        #directly call xbmc player (provides more options)
+        xbmc.Player( xbmc.PLAYER_CORE_DVDPLAYER ).play( url, listitem )
+    except:
+        print 'local file playing failed'
 
 def Stream_Source(name,url):
      link=Handle_Vidlink(url)
@@ -1896,6 +1928,387 @@ def toggleLibraryMode():
 
 def inLibraryMode():
     return xbmc.getCondVisibility("[Window.IsActive(videolibrary)]")
+'''
+def setView(content, viewType):
+    #get settings
+    selfAddon = xbmcaddon.Addon(id='plugin.video.icefilmsWC13')
+    
+    # kept for reference only
+    #movies_view = selfAddon.getSetting('movies-view')
+    #tvshows_view = selfAddon.getSetting('tvshows-view')
+    #episodes_view = selfAddon.getSetting('episodes-view')
+    #
+    
+    # set content type so library shows more views and info
+    xbmcplugin.setContent(int(sys.argv[1]), content)
+    if selfAddon.getSetting('auto-view') == 'true':
+        xbmc.executebuiltin("Container.SetViewMode(%s)" % selfAddon.getSetting(viewType) )
+    
+    # set sort methods - probably we don't need all of them
+    xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_UNSORTED )
+    xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_LABEL )
+    xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RATING )
+    xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_DATE )
+    xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_PROGRAM_COUNT )
+    xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RUNTIME )
+    xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_GENRE )
+    
+#Movie Favourites folder.
+def MOVIE_FAVOURITES(url):
+    
+    #get settings
+    selfAddon = xbmcaddon.Addon(id='plugin.video.icefilmsWC13')
+    favpath=os.path.join(translatedicedatapath,'Favourites')
+    moviefav=os.path.join(favpath,'Movies')
+    try:
+        moviedircontents=os.listdir(moviefav)
+    except:
+        moviedircontents=None
+    
+    if moviedircontents == None:
+        Notify('big','No Movie Favourites Saved','To save a favourite press the C key on a movie or\n TV Show and select Add To Icefilms Favourites','')
+    
+    else:
+        #add clear favourites entry - Not sure if we must put it here, cause it will mess up the sorting
+        #addExecute('* Clear Favourites Folder *',url,58,os.path.join(art,'deletefavs.png'))
+        
+        #handler for all movie favourites
+        if moviedircontents is not None:
+            
+            #get the necessary meta stuff
+            use_meta=os.path.exists(os.path.join(translatedicedatapath,'meta_caches'))
+            meta_setting = selfAddon.getSetting('use-meta')
+            
+            #add without metadata -- imdb is still passed for use with Add to Favourites
+            if use_meta==False or meta_setting=='false':
+                addFavourites(False,moviefav,moviedircontents, 'movie')
+            
+            #add with metadata -- imdb is still passed for use with Add to Favourites
+            elif use_meta==True and meta_setting=='true':
+                addFavourites(True,moviefav,moviedircontents, 'movie')
+        else:
+            print 'moviedircontents is none!'
+            
+    # Enable library mode & set the right view for the content
+    setView('movies', 'movies-view')
+
+#TV Shows Favourites folder
+def TV_FAVOURITES(url):
+    
+    #get settings
+    selfAddon = xbmcaddon.Addon(id='plugin.video.icefilmsWC13')
+    favpath=os.path.join(translatedicedatapath,'Favourites')
+    tvfav=os.path.join(favpath,'TV')
+    try:
+        tvdircontents=os.listdir(tvfav)
+    except:
+        tvdircontents=None
+ 
+    if tvdircontents == None:
+        Notify('big','No TV Favourites Saved','To save a favourite press the C key on a movie or\n TV Show and select Add To Icefilms Favourites','')
+
+    else:
+        #add clear favourites entry - Not sure if we must put it here, cause it will mess up the sorting
+        #addExecute('* Clear Favourites Folder *',url,58,os.path.join(art,'deletefavs.png'))
+               
+        #handler for all tv favourites
+        if tvdircontents is not None:
+            
+            #get the necessary meta stuff
+            use_meta=os.path.exists(os.path.join(translatedicedatapath,'meta_caches'))
+            meta_setting = selfAddon.getSetting('use-meta')
+            
+            #add without metadata -- imdb is still passed for use with Add to Favourites
+            if use_meta==False or meta_setting=='false':
+                addFavourites(False,tvfav,tvdircontents,'tvshow')
+                
+            #add with metadata -- imdb is still passed for use with Add to Favourites
+            elif use_meta==True and meta_setting=='true':
+                addFavourites(True,tvfav,tvdircontents,'tvshow')             
+        else:
+            print 'tvshows dircontents is none!'
+    
+    # Enable library mode & set the right view for the content
+    setView('movies', 'tvshows-view')
+
+
+def cleanUnicode(string):
+    try:
+        string = string.replace("'","").replace(unicode(u'\u201c'), '"').replace(unicode(u'\u201d'), '"').replace(unicode(u'\u2019'),'').replace(unicode(u'\u2026'),'...').replace(unicode(u'\u2018'),'').replace(unicode(u'\u2013'),'-')
+        return string
+    except:
+        return string
+
+def getMeta(scrape, mode):
+    #get settings
+    selfAddon = xbmcaddon.Addon(id='plugin.video.icefilmsWC13')
+    meta_path=os.path.join(translatedicedatapath,'meta_caches')
+    use_meta=os.path.exists(meta_path)
+    meta_setting = selfAddon.getSetting('use-meta')
+    print scrape
+    #add without metadata -- imdb is still passed for use with Add to Favourites
+    if use_meta==False or meta_setting=='false':
+        for imdb_id,url,name in scrape:
+            name=CLEANUP(name)
+            addDir(name,iceurl+url,mode,'',imdb='tt'+str(imdb_id))
+            
+    #add with metadata
+    elif use_meta==True and meta_setting=='true':
+    
+        #initialise meta class before loop
+        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        
+        for imdb_id,url,name in scrape:
+    
+            #clean name of unwanted stuff
+            name=CLEANUP(name)
+            if url.startswith('http://www.icefilms.info') == False:
+                url=iceurl+url
+            meta = {}
+            #return the metadata dictionary
+            if mode==100:
+                ice_id=str(url).replace('http://www.icefilms.info/ip.php?v=','')
+                print ice_id
+                # stupid fix for movies with no imdb_id *** to-check ***
+                if imdb_id == 'None':
+                    imdb_id = ice_id
+                meta=metaget.get_movie_meta(imdb_id, 'movie', name, ice_id)
+            elif mode==12:
+                ice_id=str(url).replace('http://www.icefilms.info/tv/series/','')
+                print ice_id
+                meta=metaget.get_movie_meta(imdb_id, 'tvshow', name, ice_id)
+    
+            #debugs
+            print 'meta_name:'+str(name)
+            #print 'meta_imdb_id:'+str(imdb_id)
+            #print 'meta_video_url:'+str(url)
+            #print 'meta_data:'+str(meta)
+            #print 'meta_imdb_id:',meta['imdb_id']
+           
+            if meta is None:
+                #add directories without meta
+                addDir(name,url,mode,'')
+            else:
+                #add directories with meta
+                addDir(name,url,mode,'',metainfo=meta,imdb='tt'+str(imdb_id))
+
+        
+def REFRESH(url,imdb_id,name,dirmode):
+        #refresh info for a Tvshow or movie
+        
+        #get settings
+        selfAddon = xbmcaddon.Addon(id='plugin.video.icefilmsWC13')
+        
+        print 'In Refresh ' + str(sys.argv[1])
+        imdb_id = imdb_id.replace('tttt','')
+        meta_path=os.path.join(translatedicedatapath,'meta_caches')
+        use_meta=os.path.exists(meta_path)
+        meta_setting = selfAddon.getSetting('use-meta')
+
+        if use_meta==False or meta_setting=='false':
+            print 'do not use meta ' 
+            for imdb_id,url,name in scrape:
+                name=CLEANUP(name)
+                addDir(name,iceurl+url,dirmode,'',imdb='tt'+str(imdb_id))   
+        #add with metadata
+        elif use_meta==True and meta_setting=='true':
+             
+            #initialise meta class before loop
+            metaget=metahandlers.MovieMetaData(translatedicedatapath)
+            
+            #for imdb_id,url,name in scrape:
+                
+            #clean name of unwanted stuff
+            name=CLEANUP(name)
+            if url.startswith('http://www.icefilms.info') == False:
+                url=iceurl+url
+            print 'IMDB before refresh is ' + imdb_id   
+            #return the metadata dictionary  
+            meta = {}
+            if dirmode==100:
+                ice_id=str(url).replace('http://www.icefilms.info/ip.php?v=','')
+                print ice_id
+                meta=metaget.get_movie_meta(imdb_id, 'movie', name, ice_id, refresh=True)
+            elif dirmode==12:
+                ice_id=str(url).replace('http://www.icefilms.info/tv/series/','')
+                print ice_id
+                meta=metaget.get_movie_meta(imdb_id, 'tvshow',name, ice_id, refresh=True)
+               
+            #debugs
+            print 'meta_name:'+str(name)
+            print 'meta_imdb_id:'+str(imdb_id)
+            print 'meta_video_url:'+str(url)
+            print 'meta_data:'+str(meta)
+            print 'meta_imdb_id:',meta['imdb_id']
+            #name = 'test'
+            if meta is None:
+                #add directories without meta
+                addDir(name,url,dirmode,'')
+            else:
+                #add directories with meta
+                addDir(name,url,int(dirmode),'',metainfo=meta,imdb=''+str(imdb_id))
+            xbmc.executebuiltin("XBMC.Container.Refresh")
+
+                
+def get_episode(season, episode, imdb_id, url):
+        #get settings
+        selfAddon = xbmcaddon.Addon(id='plugin.video.icefilmsWC13')
+
+        # displays all episodes in the source it is passed.
+        meta_path=os.path.join(translatedicedatapath,'meta_caches')
+        use_meta=os.path.exists(meta_path)
+        meta_setting = selfAddon.getSetting('use-meta')
+        imdb_id = imdb_id.replace('t','')
+        #add without metadata -- imdb is still passed for use with Add to Favourites
+        if use_meta==False or meta_setting=='false':
+            episode=CLEANUP(episode)
+            addDir(episode,iceurl+url,100,'',imdb='tt'+str(imdb_id))
+                
+        #add with metadata
+        elif use_meta==True and meta_setting=='true':
+            #initialise meta class before loop
+            metaget=metahandlers.MovieMetaData(translatedicedatapath) 
+            
+            #clean name of unwanted stuff
+            episode=CLEANUP(episode)
+            if url.startswith('http://www.icefilms.info') == False:
+                url=iceurl+url
+            meta = {}
+            #return the metadata dictionary
+            meta=metaget.get_episode_meta(imdb_id, season, episode)
+            
+            #debugs
+            print 'meta_name:'+str(name)
+            #print 'meta_imdb_id:'+str(imdb_id)
+            #print 'meta_video_url:'+str(url)
+            print 'meta_data:'+str(meta)
+            #print 'meta_imdb_id:',meta['imdb_id']
+           
+            if meta is None:
+                #add directories without meta
+                addDir(episode,iceurl+url,100,'')
+            else:
+                #add directories with meta
+                addDir(episode,url,100,'',metainfo=meta,imdb='tt'+str(imdb_id))
+
+               
+def find_meta_for_search_results(results, mode, search=''):
+    if mode == 100:
+        #initialise meta class before loop
+        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        for res in results:
+            name=res.title.encode('utf8')
+            name=CLEANSEARCH(name)
+            url=res.url.encode('utf8')
+            url=re.sub('&amp;','&',url)
+            if url.startswith('http://www.icefilms.info/ip'):
+                ice_id=str(url).replace('http://www.icefilms.info/ip.php?v=','')
+                print ice_id
+                meta=metaget._cache_lookup_by_url(ice_id)
+                if meta is None:
+                    addDir(name,url,100,'',searchMode=True)
+                else:
+                    #add directories with meta
+                    addDir(name,url,mode,'',metainfo=meta,imdb=meta['imdb_id'],searchMode=True)
+            else:
+                addDir(name,url,100,'',searchMode=True)
+    elif mode == 12:
+        #initialise meta class before loop
+        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        for myurl,interim,name in results:
+            if len(interim) < 80:
+                name=CLEANSEARCH(name)                              
+                hasnameintitle=re.search(search,name,re.IGNORECASE)
+                if hasnameintitle is not None:
+                    myurl='http://www.icefilms.info/tv/series'+myurl
+                    myurl=re.sub('&amp;','',myurl)
+                    if myurl.startswith('http://www.icefilms.info/tv/series'):
+                        ice_id=str(myurl).replace('http://www.icefilms.info/tv/series/','').replace('.html', '')
+                        print ice_id
+                        meta=metaget._cache_lookup_by_url(ice_id)
+                        if meta is None:
+                            addDir(name,myurl,12,'',searchMode=True)
+                        else:
+                            print meta
+                            #add directories with meta
+                            addDir(name,myurl,12,'',metainfo=meta,imdb=meta['imdb_id'],searchMode=True)
+                    else:
+                        addDir(name,myurl,12,'',searchMode=True)
+ 
+         
+def SearchGoogle(search):
+    gs = GoogleSearch(''+search+' site:http://www.youtube.com ')
+    gs.results_per_page = 25
+    gs.page = 0
+    results = gs.get_results()
+    
+    return results
+                               
+def SearchForTrailer(search, imdb_id, type, manual=False):
+    search = search.replace(' *HD 720p*', '')
+    res_name = []
+    res_url = []
+    res_name.append('Nothing Found. Thanks!!!')
+    res_name.append('Manualy enter search...')
+    
+    if manual:
+        results = SearchGoogle(search)
+        for res in results:
+            if res.url.encode('utf8').startswith('http://www.youtube.com/watch'):
+                res_name.append(res.title.encode('utf8'))
+                res_url.append(res.url.encode('utf8'))
+    else:
+        results = SearchGoogle(search+' official trailer')
+        for res in results:
+            if res.url.encode('utf8').startswith('http://www.youtube.com/watch'):
+                res_name.append(res.title.encode('utf8'))
+                res_url.append(res.url.encode('utf8'))
+        results = SearchGoogle(search[:(len(search)-7)]+' official trailer')
+        for res in results:
+            if res.url.encode('utf8').startswith('http://www.youtube.com/watch') and res.url.encode('utf8') not in res_url:
+                res_name.append(res.title.encode('utf8'))
+                res_url.append(res.url.encode('utf8'))
+            
+    dialog = xbmcgui.Dialog()
+    ret = dialog.select(search + ' trailer search',res_name)
+    
+    # Manual search for trailer
+    if ret == 1:
+        if manual:
+            default = search
+            title = 'Manual Search for '+search
+        else:
+            default = search+' official trailer'
+            title = 'Manual Trailer Search for '+search
+        keyboard = xbmc.Keyboard(default, title)
+        #keyboard.setHiddenInput(hidden)
+        keyboard.doModal()
+        
+        if keyboard.isConfirmed():
+            result = keyboard.getText()
+            SearchForTrailer(result, imdb_id, type, manual=True) 
+    # Found trailers
+    elif ret > 1:
+        trailer_url = res_url[ret - 2]
+        print trailer_url
+        xbmc.executebuiltin(
+            "PlayMedia(plugin://plugin.video.youtube/?action=play_video&videoid=%s&quality=720p)" 
+            % str(trailer_url)[str(trailer_url).rfind("v=")+2:] )
+        
+        #dialog.ok(' title ', ' message ')
+        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        if type==100:
+            type='movie'
+        elif type==12:
+            type='tvshow'
+        metaget.update_trailer(imdb_id, type, trailer_url)
+        xbmc.executebuiltin("XBMC.Container.Refresh")
+
+def ChangeWatched(imdb_id, videoType, name, season):
+    metaget=metahandlers.MovieMetaData(translatedicedatapath)
+    metaget.change_watched(imdb_id, videoType, name, season)
+    xbmc.executebuiltin("XBMC.Container.Refresh")
+'''
 
 def get_params():
         param=[]
@@ -2110,6 +2523,9 @@ elif mode==202:
 elif mode==203:
         Kill_Streaming(name,url)
 
+elif mode==205:
+        PlayFile(name,url)
+  
 elif mode==300:
         toggleLibraryMode()
 
