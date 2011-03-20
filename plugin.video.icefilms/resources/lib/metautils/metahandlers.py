@@ -5,13 +5,15 @@ It uses sqlite databases.
 Currently supports only TheMovieDB, but is scheduled to support TVDB.
 
 It uses themoviedb JSON api class and TVDB XML api class.
+For TVDB it currently uses a modified version of 
+Python API by James Smith (http://loopj.com)
 They can both be found in the same folder.
 
 *Metahandlers created for Icefilms addon Release v1.0.0
 
-*Credits: Daledude / Anarchintosh 
+*Credits: Daledude / Anarchintosh / WestCoast13 
 
-*Last Updated: 9th/Febuary/2011
+*Last Updated: 19th/March/2011
     
 *To-Do:
 - write a clean database function (correct imgs_prepacked by checking if the images actually exist)
@@ -413,19 +415,25 @@ class MovieMetaData:
 #--------------------------------Start of Movie cache handling code ----------------#
 
         
-    def get_movie_meta(self, imdb_id):
+    def get_movie_meta(self, imdb_id, type, name, ice_id, refresh=False):
 
         # add the tt if not found. integer aware.
         imdb_id=str(imdb_id)
         if not imdb_id.startswith('tt'):
                 imdb_id = "tt%s" % imdb_id
 
-        meta = self._cache_lookup_movie_by_imdb(imdb_id)
+        if refresh:
+            meta=None
+        else:
+            self.check_video_for_url( ice_id, imdb_id, type )
+            meta = self._cache_lookup_movie_by_imdb(imdb_id, type)
 
         if meta is None:
             #print "adding to cache and getting metadata from web"
-            meta = self._get_tmdb_meta_data(imdb_id)
-            self._cache_save_movie_meta(meta)
+            meta = self._get_tmdb_meta_data(imdb_id,type, name)
+            meta['watched'] = self.get_watched( imdb_id, 'movie')
+            #meta['plot']=cleanUnicode(str(meta['plot']))
+            self._cache_save_movie_meta(meta, type)
 
             #if creating a metadata container, download the images.
             if self.classmode is 'true':
@@ -455,7 +463,13 @@ class MovieMetaData:
                         #if not os.path.exists(backdrop_path):
                         #        self._downloadimages(meta,'movies',imdb_id)
 
-        meta['plot']=cleanUnicode(meta['plot'])    
+        #Clean some unicode stuff
+        try:
+            meta['plot']=cleanUnicode(str(meta['plot']))
+        except:
+            print 'could not clean plot'
+
+            
         #Return the values to XBMC
         return meta
     
@@ -531,9 +545,13 @@ class MovieMetaData:
         
         #self.dbcur.execute('CREATE INDEX IF NOT EXISTS nameindex on tvshow_meta (name);')
 
-    def _cache_lookup_movie_by_imdb(self, imdb_id):
+    def _cache_lookup_movie_by_imdb(self, imdb_id, type):
+        if type == 'movie':
+            table='movie_meta'
+        elif type == 'tvshow':
+            table='tvshow_meta'
         # select * is easier since we return a dict but may not be efficient.
-        self.dbcur.execute("SELECT * FROM movie_meta WHERE imdb_id = '%s'" % imdb_id) #select database row where imdb_id matches
+        self.dbcur.execute("SELECT * FROM " + table + " WHERE imdb_id = '%s'" % imdb_id) #select database row where imdb_id matches
         matchedrow = self.dbcur.fetchone()
         if matchedrow:
                 return dict(matchedrow)
@@ -557,21 +575,34 @@ class MovieMetaData:
                            "('%s', '%s', '%s', '%s', '%s', '%s' )" % ( ice_id, type, imdb_id, '', '', '' ))
             self.dbcon.commit()
             
-    def _cache_save_movie_meta(self, meta):
+    def _cache_save_movie_meta(self, meta, type):
+        if type == 'movie':
+            table='movie_meta'
+        elif type == 'tvshow':
+            table='tvshow_meta'
+        self.dbcur.execute("SELECT * FROM " + table + " WHERE imdb_id = '%s'" % meta['imdb_id']) #select database row where imdb_id matches
+        matchedrow = self.dbcur.fetchone()
+        if matchedrow:
+                self.dbcur.execute("DELETE FROM " + table + " WHERE imdb_id = '%s'" % meta['imdb_id']) #delete database row where imdb_id matches
         # use named-parameter binding for lazyness
-        self.dbcur.execute("INSERT INTO movie_meta VALUES "
-                           "(:imdb_id, :tmdb_id, :name, :rating, :duration, :plot, :mpaa, :premiered, :genres, :studios, :thumb_url, :cover_url, :trailer_url, :backdrop_url, :imgs_prepacked)",
+        print meta
+        self.dbcur.execute("INSERT INTO " + table + " VALUES "
+                           "(:imdb_id, :tmdb_id, :name, :rating, :duration, :plot, :mpaa, :premiered, :genres, :studios, :thumb_url, :cover_url, :trailer_url, :backdrop_url, :imgs_prepacked, :watched)",
                            meta
+                           #"('%s', '%s', '%s', %s, %s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')"
+                           #% ( meta['imdb_id'], meta['tmdb_id'],meta['name'],meta['rating'],meta['duration'],meta['plot'],meta['mpaa'],
+                           #meta['premiered'],meta['genres'],meta['studios'],meta['thumb_url'],meta['cover_url'],meta['trailer_url'],meta['backdrop_url'],meta['imgs_prepacked'])
         )
         self.dbcon.commit()
 
     # this will return a dict. it must also return an empty dict when
     # no movie meta info was found from tmdb because we should cache
     # these "None found" entries otherwise we hit tmdb alot.
-    def _get_tmdb_meta_data(self, imdb_id):
+    
+    def _get_tmdb_meta_data(self, imdb_id, type, name):
         #get metadata text using themoviedb api
         tmdb = TMDB()
-        md = tmdb.imdbLookup(imdb_id)
+        md = tmdb.imdbLookup(imdb_id,type,name)
         if md is None:
             # create an empty dict so below will at least populate empty data for the db insert.
             md = {}
@@ -579,33 +610,32 @@ class MovieMetaData:
         # copy tmdb to our own for conformity and eliminate KeyError.
         # we set a default value for those keys not returned by tmdb.
         meta = {}
+        meta['watched'] = 6
         meta['imdb_id'] = imdb_id
         meta['tmdb_id'] = md.get('id', '')
-        meta['name'] = md.get('name', '')
+        meta['name'] = name #md.get('name', '')
         meta['rating'] = md.get('rating', 0)
         meta['duration'] = md.get('runtime', 0)
         meta['plot'] = md.get('overview', '')
         meta['mpaa'] = md.get('certification', '')
         meta['premiered'] = md.get('released', '')
         meta['trailer_url'] = md.get('trailer', '')
-
+        #print meta['plot']
         meta['genres'] = ''
+        if md.has_key('imdb_genres'):
+            meta['genres'] = md.get('imdb_genres', '')
         meta['studios'] = ''
-        try:
-            meta['genres'] = (md.get('genres', '')[0])['name']
-        except:
-            try:
-                meta['genres'] = (md.get('genres', '')[1])['name']
-            except:
-                try:
-                    meta['genres'] = (md.get('genres', '')[2])['name']
-                except:
-                    try:    
-                        meta['genres'] = (md.get('genres', '')[3])['name']
-                    except:
-                        #print 'genres failed: ',md.get('genres', '')
-                        pass
-
+        tmp_gen = []
+        tmp_gen = md.get('genres', '')
+        for temp in tmp_gen:
+            if meta['genres'] == '':
+                meta['genres'] = temp.get('name','')
+            else:
+                meta['genres'] = meta['genres'] + ' / ' + temp.get('name','')
+        print "My genres are : **************  " + meta['genres']
+        
+        if md.has_key('tvdb_studios'):
+            meta['studios'] = md.get('tvdb_studios', '')
         try:
             meta['studios'] = (md.get('studios', '')[0])['name']
         except:
@@ -630,6 +660,8 @@ class MovieMetaData:
         # define these early cuz they must exist whether posters do or not
         meta['thumb_url'] = ''
         meta['cover_url'] = ''
+        if md.has_key('imdb_poster'):
+            meta['cover_url'] = md.get('imdb_poster', '')
         if md.has_key('posters'):
             # find first thumb poster url
             for poster in md['posters']:

@@ -189,6 +189,7 @@ class TheTVDB(object):
         """Get a list of shows matching show_name."""
         get_args = urllib.urlencode({"seriesname": show_name}, doseq=True)
         url = "%s/GetSeries.php?%s" % (self.base_url, get_args)
+        print url
         data = urllib.urlopen(url)
         show_list = []
         print url
