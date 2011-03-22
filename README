@@ -1,6 +1,7 @@
 Addon also requires: 
 script.module.simplejson-2.0.10.zip
+script.module.elementtree-1.2.7.zip
 This should be installed automatically when stable release is installed from googlecode repository.
-You can also it from http://code.google.com/p/anarchintosh-projects/downloads/list
+You can also get them from http://code.google.com/p/anarchintosh-projects/downloads/list
 
 Megaroutines is scheduled to be replaced with videourlresolver module, when it is stable.
