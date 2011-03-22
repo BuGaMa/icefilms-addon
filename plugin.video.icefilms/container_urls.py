@@ -7,34 +7,33 @@
 
 #return dictionary of strings and integers
 def get():
-          containers = { 
+          containers = {} 
 
           #date updated
-          date : '9/Feb/2011',
+          containers['date'] = '9/Feb/2011'
           
           #--- Movie Meta Container ---# 
 
           #basic container        
-          mv_db_url : 'http://www.megaupload.com/?d=U1RTPGQS',
-          mv_covers_url : 'http://www.megaupload.com/?d=CE07S1EJ',
-          mv_db_base_size :230,
+          containers['mv_db_url'] = 'http://www.megaupload.com/?d=U1RTPGQS'
+          containers['mv_covers_url'] = 'http://www.megaupload.com/?d=CE07S1EJ'
+          containers['mv_db_base_size'] = 230
 
           #additional container
-          mv_add_url : '',
-          mv_add_size : 0,
+          containers['mv_add_url'] = ''
+          containers['mv_add_size'] = 0
 
 
           #--- TV   Meta  Container ---#
 
           #basic container       
-          tv_db : '',
-          tv_base : '',
-          tv_db_base_size : 0,
+          containers['tv_db'] = ''
+          containers['tv_base'] = ''
+          containers['tv_db_base_size'] = 0
 
           #additional container
-          tv_add_url : '',
-          tv_add_size : 0,          
+          containers['tv_add_url'] = ''
+          containers['tv_add_size'] = 0       
 
-          }
 
           return containers
