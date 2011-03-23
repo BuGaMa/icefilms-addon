@@ -1454,7 +1454,9 @@ def Get_Path(srcname,vidname):
           
      #get path for download
      mypath=os.path.normpath(str(selfAddon.getSetting('download-folder')))
-
+     
+     #clean video name of unwanted characters
+     vidname = cleanFilename(vidname)
      if os.path.exists(mypath):
 
           #if source is split into parts, attach part number to the videoname.
@@ -1630,25 +1632,32 @@ def Stream_Source(name,url):
 
 def Download_Source(name,url):
 
-     #get proper name of vid
-     vidname=handle_file('videoname','open')
-
-     mypath=Get_Path(name,vidname)
-
-     print 'MYPATH: ',mypath
-     if mypath is 'path not set':
-          Notify('Download Alert','You have not set the download folder.\n Please access the addon settings and set it.','','')
-
-     else:
-          if os.path.isfile(mypath) is True:
-               Notify('Download Alert','The video you are trying to download already exists!','','')
-          else:              
-               link=Handle_Vidlink(url)
-               print 'attempting to download file'
-               try:
+    #get proper name of vid
+    vidname=handle_file('videoname','open')
+    
+    mypath=Get_Path(name,vidname)
+    
+    #get settings
+    selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+       
+    print 'MYPATH: ',mypath
+    if mypath is 'path not set':
+        Notify('Download Alert','You have not set the download folder.\n Please access the addon settings and set it.','','')
+    
+    else:
+        if os.path.isfile(mypath) is True:
+            Notify('Download Alert','The video you are trying to download already exists!','','')
+        else:              
+            link=Handle_Vidlink(url)
+            DownloadInBack=selfAddon.getSetting('download-in-background')
+            print 'attempting to download file, silent = '+ DownloadInBack
+            try:
+                if DownloadInBack == 'true':
+                    QuietDownload(link[0], mypath, vidname)
+                else:
                     Download(link[0], mypath, vidname)
-               except:
-                    print 'download failed'
+            except:
+                print 'download failed'
 
 def Check_Mega_Limits(name,url):
      WaitIf()
@@ -1673,7 +1682,7 @@ def Download(url, dest, displayname=False):
         selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
           
         if displayname == False:
-             displayname=url
+            displayname=url
         DeleteIncomplete=selfAddon.getSetting('delete-incomplete-downloads')
         dp = xbmcgui.DialogProgress()
         dp.create('Downloading', '', displayname)
@@ -1682,20 +1691,21 @@ def Download(url, dest, displayname=False):
             urllib.urlretrieve(url, dest, lambda nb, bs, fs: _pbhook(nb, bs, fs, dp, start_time)) 
         except:
             if DeleteIncomplete == 'true':
-                 #delete partially downloaded file if setting says to.
-                 while os.path.exists(dest): 
-                     try: 
-                         os.remove(dest) 
-                         break 
-                     except: 
-                          pass 
+                #delete partially downloaded file if setting says to.
+                while os.path.exists(dest): 
+                    try: 
+                        os.remove(dest) 
+                        break 
+                    except: 
+                        pass 
             #only handle StopDownloading (from cancel), ContentTooShort (from urlretrieve), and OS (from the race condition); let other exceptions bubble 
             if sys.exc_info()[0] in (urllib.ContentTooShortError, StopDownloading, OSError): 
                 return 'false' 
             else: 
                 raise 
         return 'downloaded'
-     
+
+'''     
 def QuietDownload(url, dest):
 #possibly useful in future addon versions
      
@@ -1720,12 +1730,22 @@ def QuietDownload(url, dest):
             else: 
                 raise 
         return 'downloaded' 
-
-def testDownload(url, dest):         
+'''
+def QuietDownload(url, dest, videoname):
+    #quote parameters passed to download script     
     q_url = urllib.quote_plus(url)
     q_dest = urllib.quote_plus(dest)
-    script = os.path.join( os.getcwd(), "AddonScanInBackground.py" )
-    xbmc.executebuiltin( "RunScript(%s, %s, %s)" % ( script, q_url, q_dest ) )
+    q_vidname = urllib.quote_plus(videoname)
+    
+    #Create possible values for notification
+    notifyValues = [2, 5, 10, 20, 25, 50, 100]
+    #get settings
+    selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
+    # get notify value from settings
+    NotifyPercent=int(selfAddon.getSetting('notify-percent'))
+    
+    script = os.path.join( os.getcwd(), "DownloadInBackground.py" )
+    xbmc.executebuiltin( "RunScript(%s, %s, %s, %s, %s)" % ( script, q_url, q_dest, q_vidname, str(notifyValues[NotifyPercent]) ) )
              
 
 def _pbhook(numblocks, blocksize, filesize, dp, start_time):
