@@ -1744,7 +1744,7 @@ def QuietDownload(url, dest, videoname):
     # get notify value from settings
     NotifyPercent=int(selfAddon.getSetting('notify-percent'))
     
-    script = os.path.join( os.getcwd(), "DownloadInBackground.py" )
+    script = os.path.join( icepath, 'resources', 'lib', "DownloadInBackground.py" )
     xbmc.executebuiltin( "RunScript(%s, %s, %s, %s, %s)" % ( script, q_url, q_dest, q_vidname, str(notifyValues[NotifyPercent]) ) )
              
 
