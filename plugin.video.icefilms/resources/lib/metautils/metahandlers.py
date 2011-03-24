@@ -558,21 +558,29 @@ class MovieMetaData:
         else:
             return None
         
-    def check_video_for_url(self, ice_id, imdb_id, type):
-        if type == 'movie':
-            table='movie_meta'
-        elif type == 'tvshow':
-            table='tvshow_meta'
+    def check_video_for_url(self, ice_id, imdb_id, type, tvdb_id='', season='', episode=''):
         self.dbcur.execute("SELECT * FROM url WHERE url = '%s'" % ice_id )
         matchedrow = self.dbcur.fetchone()
+        
         if matchedrow:
-            if matchedrow['imdb_id'] != imdb_id:
-                print 'There might be a problem here. We have to update url with the correct imdb_id'
-                self.dbcur.execute("UPDATE url SET imdb_id = '%s', type = '%s' WHERE url = '%s' " % ( imdb_id, type, ice_id ) )
+            if type=='episode':
+                if matchedrow['imdb_id'] != imdb_id or matchedrow['tvdb_id'] != tvdb_id or matchedrow['season'] != season or matchedrow['name'] != episode:
+                    print 'There might be a problem with this episode. We have to update url with the correct data'
+                    self.dbcur.execute('UPDATE url SET imdb_id = "%s", type = "%s", '
+                                       'tvdb_id = "%s", season = "%s", name = "%s" WHERE url = "%s" '
+                                       '' % ( imdb_id, type, tvdb_id, season, episode, ice_id ) )
+            else:
+                if matchedrow['imdb_id'] != imdb_id:
+                    print 'There might be a problem here. We have to update url with the correct imdb_id'
+                    self.dbcur.execute("UPDATE url SET imdb_id = '%s', type = '%s' WHERE url = '%s' " % ( imdb_id, type, ice_id ) )
                 
         else:
-            self.dbcur.execute("INSERT INTO url VALUES "
-                           "('%s', '%s', '%s', '%s', '%s', '%s' )" % ( ice_id, type, imdb_id, '', '', '' ))
+            if type != 'episode':
+                tvdb_id=''
+                season=''
+                episode=''
+            self.dbcur.execute('INSERT INTO url VALUES '
+                           '("%s", "%s", "%s", "%s", "%s", "%s" )' % ( ice_id, type, imdb_id, tvdb_id, season, episode ))
             self.dbcon.commit()
             
     def _cache_save_movie_meta(self, meta, type):
@@ -684,7 +692,7 @@ class MovieMetaData:
 
         return meta
 
-    def get_episode_meta(self, imdb_id, season, episode, refresh=False):
+    def get_episode_meta(self, imdb_id, season, episode, ice_id, refresh=False):
 
         # add the tt if not found. integer aware.
         imdb_id=str(imdb_id)
@@ -721,14 +729,17 @@ class MovieMetaData:
         
         print 'imdb=' + str(imdb_id) + ' ' + season + ' Episode ' + episode + ' Episode Num=' + ep_num
         
+        #Find tvdb_id for the TVshow
+        tvdb_id = self._get_tvdb_id(imdb_id)
+        
         if refresh:
             meta=None
         else:
+            self.check_video_for_url( ice_id, imdb_id, 'episode', tvdb_id=tvdb_id, season=season, episode=episode  )
             meta = self._cache_lookup_episode(imdb_id, season, episode)#ep_num)
         
         if meta is None:
-            #Find tvdb_id for the TVshow
-            tvdb_id = self._get_tvdb_id(imdb_id)
+            
             if tvdb_id == '' or tvdb_id is None:
                 print "Could not find TVshow with imdb " + imdb_id
                 
@@ -1086,6 +1097,11 @@ class MovieMetaData:
             print imdb_id
             if (type == 'movie' or type == 'tvshow') and imdb_id is not None:
                 meta = self._cache_lookup_movie_by_imdb(imdb_id, type)
+                return meta
+            elif type=='episode':
+                season = dict(matchedrow)['season']
+                episode = dict(matchedrow)['name']
+                meta = self._cache_lookup_episode( imdb_id, season, episode)
                 return meta
             else:
                 return None

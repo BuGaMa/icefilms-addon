@@ -2101,15 +2101,28 @@ def getMeta(scrape, mode):
             meta = {}
             #return the metadata dictionary
             if mode==100:
+                # get ice_id from url
                 ice_id=str(url).replace('http://www.icefilms.info/ip.php?v=','')
-                print ice_id
+                if len(ice_id) > 0:
+                    if ice_id.endswith('&') is False:
+                        ice_id = ice_id + '&'
+                    print ice_id
+                else:
+                    ice_id = ''
+                    print 'Could not find the url ice_id for video ' + name
+                
                 # stupid fix for movies with no imdb_id *** to-check ***
                 if imdb_id == 'None':
                     imdb_id = ice_id
+                #return the metadata dictionary
                 meta=metaget.get_movie_meta(imdb_id, 'movie', name, ice_id)
             elif mode==12:
+                # get ice_id from url
                 ice_id=str(url).replace('http://www.icefilms.info/tv/series/','')
-                print ice_id
+                if len(ice_id) == 0 or ice_id is None:
+                    ice_id = ''
+                    print 'Could not find the url ice_id for tv show ' + name
+                #return the metadata dictionary
                 meta=metaget.get_movie_meta(imdb_id, 'tvshow', name, ice_id)
     
             #debugs
@@ -2160,12 +2173,24 @@ def REFRESH(url,imdb_id,name,dirmode):
             #return the metadata dictionary  
             meta = {}
             if dirmode==100:
+                # get ice_id from url
                 ice_id=str(url).replace('http://www.icefilms.info/ip.php?v=','')
-                print ice_id
+                if len(ice_id) > 0:
+                    if ice_id.endswith('&') is False:
+                        ice_id = ice_id + '&'
+                    print ice_id
+                else:
+                    ice_id = ''
+                    print 'Could not find the url ice_id for video ' + name
+                #return the metadata dictionary
                 meta=metaget.get_movie_meta(imdb_id, 'movie', name, ice_id, refresh=True)
             elif dirmode==12:
+                # get ice_id from url
                 ice_id=str(url).replace('http://www.icefilms.info/tv/series/','')
-                print ice_id
+                if len(ice_id) == 0 or ice_id is None:
+                    ice_id = ''
+                    print 'Could not find the url ice_id for tv show ' + name
+                #return the metadata dictionary
                 meta=metaget.get_movie_meta(imdb_id, 'tvshow',name, ice_id, refresh=True)
                
             #debugs
@@ -2208,8 +2233,19 @@ def get_episode(season, episode, imdb_id, url):
             if url.startswith('http://www.icefilms.info') == False:
                 url=iceurl+url
             meta = {}
+            
+            # get ice_id from url
+            ice_id=str(url).replace('http://www.icefilms.info/ip.php?v=','')
+            if len(ice_id) > 0:
+                if ice_id.endswith('&') is False:
+                    ice_id = ice_id + '&'
+                print ice_id
+            else:
+                ice_id = ''
+                print 'Could not find the url ice_id for episode ' + episode
+                
             #return the metadata dictionary
-            meta=metaget.get_episode_meta(imdb_id, season, episode)
+            meta=metaget.get_episode_meta(imdb_id, season, episode, ice_id)
             
             #debugs
             print 'meta_name:'+str(name)
@@ -2237,7 +2273,15 @@ def find_meta_for_search_results(results, mode, search=''):
             url=re.sub('&amp;','&',url)
             if url.startswith('http://www.icefilms.info/ip'):
                 ice_id=str(url).replace('http://www.icefilms.info/ip.php?v=','')
-                print ice_id
+                if len(ice_id) > 0:
+                    if ice_id.endswith('&') is False:
+                        ice_id = ice_id + '&'
+                    print ice_id
+                else:
+                    ice_id = ''
+                    print 'Could not find the url ice_id for video ' + str(url)
+                    
+                #return the metadata dictionary    
                 meta=metaget._cache_lookup_by_url(ice_id)
                 if meta is None:
                     addDir(name,url,100,'',searchMode=True)
@@ -2259,6 +2303,8 @@ def find_meta_for_search_results(results, mode, search=''):
                     if myurl.startswith('http://www.icefilms.info/tv/series'):
                         ice_id=str(myurl).replace('http://www.icefilms.info/tv/series/','').replace('.html', '')
                         print ice_id
+                        
+                        #return the metadata dictionary
                         meta=metaget._cache_lookup_by_url(ice_id)
                         if meta is None:
                             addDir(name,myurl,12,'',searchMode=True)
