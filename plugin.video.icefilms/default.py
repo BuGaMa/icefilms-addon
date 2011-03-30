@@ -286,8 +286,8 @@ def ContainerStartup(selfAddon):
           if ret==True:
                  
                #download dem files
-               get_db_zip=Zip_DL_and_Install(containers['mv_db_url'],'themoviedb','database')
-               get_cover_zip=Zip_DL_and_Install(containers['mv_covers_url'],'themoviedb','covers')
+               get_db_zip=Zip_DL_and_Install(containers['mv_db_url'],'movie','database')
+               get_cover_zip=Zip_DL_and_Install(containers['mv_covers_url'],'movie','covers')
 
                #do nice notification
                if get_db_zip==True and get_cover_zip==True:
@@ -297,6 +297,8 @@ def ContainerStartup(selfAddon):
 
 
 def Zip_DL_and_Install(url,dbtype,installtype):
+               ####function to download and install a metacontainer. ####
+     
                url = str(url)
 
                #define dl directory
@@ -897,10 +899,9 @@ def TVA2ZDirectories(url):
              
      
 def MOVIEINDEX(url):
-    #Indexer for most things. (Not just movies.) 
+    #Indexer for most things. (Movies,Music,Stand-up etc) 
     
     link=GetURL(url)
-    #print link
     
     # we do this to fix the problem when there is no imdb_id. 
     # I have found only one movie with this problem, but we must check this...
@@ -1093,8 +1094,7 @@ def LOADMIRRORS(url):
      match=re.compile('/membersonly/components/com_iceplayer/(.+?)" width=').findall(link)
      match[0]=re.sub('%29',')',match[0])
      match[0]=re.sub('%28','(',match[0])
-     for url in match:
-          mirrorpageurl = iceurl+'membersonly/components/com_iceplayer/'+url
+     mirrorpageurl = iceurl+'membersonly/components/com_iceplayer/'+match[0]
 
      mlink=GetURL(mirrorpageurl)
 
@@ -1328,7 +1328,7 @@ def SOURCE(scrape):
               numlist.append(str(num))
 
           #for every number, run PART.
-          #The first thing PART does is check whether that number source exists...
+          #The first thing PART does is check whether that number source exists in the page source code...
           #...so it's not as CPU intensive as you might think.    
           for thenumber in numlist: 
                PART(scrape,thenumber,hide2shared,megapic,shared2pic)
@@ -1449,6 +1449,8 @@ def cleanFilename(file):
     return file
 
 def Get_Path(srcname,vidname):
+     ##Gets the path the file will be downloaded to, and if necessary makes the folders##
+     
      #get settings
      selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
           
@@ -1542,9 +1544,10 @@ def Item_Meta(name):
 
 
 def do_wait(account):
-
+     # do the necessary wait, with  a nice notice and pre-set waiting time. I have found the below waiting times to never fail.
+     
      if account == 'premium':
-          return handle_wait(1,'Megaupload','Loading video with your *Premium* account.')
+          return handle_wait(3,'Megaupload','Loading video with your *Premium* account.')
 
      elif account == 'free':
           return handle_wait(26,'Megaupload Free User','Loading video with your free account.')
@@ -1591,8 +1594,8 @@ def Handle_Vidlink(url):
      if ismega is not None:
           WaitIf()
           
-          mu=megaroutines.megaupload(translatedicedatapath)
-          link=mu.resolve_megaup(url)
+          mu = megaroutines.megaupload(translatedicedatapath)
+          link = mu.resolve_megaup(url)
 
           finished = do_wait(link[3])
 
@@ -2090,7 +2093,7 @@ def getMeta(scrape, mode):
     elif use_meta==True and meta_setting=='true':
     
         #initialise meta class before loop
-        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        metaget=metahandlers.MetaData(translatedicedatapath)
         
         for imdb_id,url,name in scrape:
     
@@ -2099,31 +2102,17 @@ def getMeta(scrape, mode):
             if url.startswith('http://www.icefilms.info') == False:
                 url=iceurl+url
             meta = {}
+
             #return the metadata dictionary
             if mode==100:
-                # get ice_id from url
-                ice_id=str(url).replace('http://www.icefilms.info/ip.php?v=','')
-                if len(ice_id) > 0:
-                    if ice_id.endswith('&') is False:
-                        ice_id = ice_id + '&'
-                    print ice_id
-                else:
-                    ice_id = ''
-                    print 'Could not find the url ice_id for video ' + name
                 
-                # stupid fix for movies with no imdb_id *** to-check ***
-                if imdb_id == 'None':
-                    imdb_id = ice_id
                 #return the metadata dictionary
-                meta=metaget.get_movie_meta(imdb_id, 'movie', name, ice_id)
+                meta=metaget.get_meta(imdb_id, 'movie', name, url)
+
             elif mode==12:
-                # get ice_id from url
-                ice_id=str(url).replace('http://www.icefilms.info/tv/series/','')
-                if len(ice_id) == 0 or ice_id is None:
-                    ice_id = ''
-                    print 'Could not find the url ice_id for tv show ' + name
+                
                 #return the metadata dictionary
-                meta=metaget.get_movie_meta(imdb_id, 'tvshow', name, ice_id)
+                meta=metaget.get_meta(imdb_id, 'tvshow', name, url)
     
             #debugs
             print 'meta_name:'+str(name)

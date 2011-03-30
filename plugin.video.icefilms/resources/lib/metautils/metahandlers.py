@@ -2,14 +2,12 @@
 These classes cache non-existant metadata from TheMovieDB and TVDB.
 It uses sqlite databases.
 
-Currently supports only TheMovieDB, but is scheduled to support TVDB.
-
 It uses themoviedb JSON api class and TVDB XML api class.
 For TVDB it currently uses a modified version of 
 Python API by James Smith (http://loopj.com)
 They can both be found in the same folder.
 
-*Metahandlers created for Icefilms addon Release v1.0.0
+*This Metahandlers was created for Icefilms addon Release v1.1.0
 
 *Credits: Daledude / Anarchintosh / WestCoast13 
 
@@ -30,9 +28,11 @@ import re
 import sys
 import urllib
 import urllib2
-import cStringIO
-import string
 import shutil
+
+#append lib directory
+sys.path.append((os.path.split(os.getcwd()))[0])
+
 import clean_dirs
 
 try:
@@ -52,7 +52,6 @@ except:
     from sqlite3 import dbapi2 as sqlite
 
 
-
 def get_dir(mypath, dirname):
     #...creates sub-directories if they are not found.
     subpath = os.path.join(mypath, dirname)
@@ -63,13 +62,12 @@ def get_dir(mypath, dirname):
 def bool2string(myinput):
     #neatens up usage of preparezip flag.
     if myinput is False:
-        myoutput = 'false'
-        return myoutput
+        return 'false'
     elif myinput is True:
-        myoutput = 'true'
-        return myoutput
+        return 'true'
 
 def Movie_URL_List():
+    #### Generate full list of movies hosted on icefilms ####
         iceurl='http://www.icefilms.info/'
         mvurl=iceurl+'movies/a-z/'
 
@@ -82,10 +80,26 @@ def Movie_URL_List():
                 myurl=mvurl+theletter
                 finallist.append(myurl)
 
-        #append the urls of the other categories
+        #append the single url A-Z pages of the other movie categories
         finallist.append(iceurl+'music/a-z/1')
         finallist.append(iceurl+'standup/a-z/1')
         finallist.append(iceurl+'other/a-z/1')
+
+        return finallist
+
+def TVShow_URL_List():
+    #### Generate full list of tv shows hosted on icefilms ####
+        iceurl='http://www.icefilms.info/'
+        tvurl=iceurl+'tv/a-z/'
+
+        finallist=[]
+
+        #Generate A-Z icefilms movie url list and return it
+        AZ=list([chr(i) for i in xrange(ord('A'), ord('Z')+1)])
+        AZ.append('1')
+        for theletter in AZ:
+                myurl=tvurl+theletter
+                finallist.append(myurl)
 
         return finallist
 
@@ -103,7 +117,7 @@ def cleanUnicode(string):
         #string = string.replace('\\xc3', '?') 
         #fixed_string = string.replace("'","").replace(unicode(u'\u201c'), '"').replace(unicode(u'\u201d'), '"').replace(unicode(u'\u2019'),'').replace(unicode(u'\u2026'),'...').replace(unicode(u'\u2018'),'').replace(unicode(u'\u2013'),'-')
         
-        #to-check if we need only this to solve unicode problems
+        #solve those unicode problems
         fixed_string = unicodedata.normalize('NFKD', string).encode('ascii','ignore')
         #print 'THE STRING:',fixed_string
         return fixed_string
@@ -114,32 +128,55 @@ class MetaContainer:
 
     def Create_Icefilms_Container(self,outpath):
 
+        ####  Create a full metadata cache  ####
+        # Note: please update this with the latest code from MOVIEINDEX and TVINDEX  (from default.py)
+
         #create container working directory
         workdir=os.path.join(outpath,'Generated Icefilms Container')
         if not os.path.exists(workdir):
             os.makedirs(workdir)
-        print 'BUILDING CONTAINER IN:',workdir
+        print '### BUILDING CONTAINER IN:',workdir
+        print ' '
 
         #Initialise meta class, set it to download images.
-        meta=MovieMetaData(workdir, preparezip=True)
+        meta=MetaData(workdir, preparezip=True)
 
-        #code to scrape A-Z of all movies on icefilms.
+        print '### Adding movies to database ###'
+        print ' '
+        print ' '
+
+        #scrape A-Z of all movies on icefilms.
         mvinks=Movie_URL_List()
         for myaz in mvinks:
-            print 'GETTING METADATA FOR ALL ENTRIES ON: '+myaz
+            print '### GETTING METADATA FOR ALL ENTRIES ON: '+myaz
             link=GetURL(myaz)
+            link = re.sub('<a name=i id=>','<a name=i id=None>',link)
             match=re.compile('<a name=i id=(.+?)></a><img class=star><a href=/(.+?)>(.+?)<br>').findall(link)
 
             #For all results run the class
             for imdb_id,url,name in match:
                 meta.get_movie_meta(imdb_id)
 
-        print 'Container Making is Finished'
+        print '### FINISHED Adding movies to database ###'
+        print ' '
+        print ' '
 
-        print 'Cleaning image directory of empty sub-directories [Running clean_dirs.py]'
+        print '### Adding TV Shows to database ###'
+        print ' '
+        print ' '
+
+
+        print '### FINISHED Adding TV Shows to database ###'
+        print ' '
+        print ' '
+
+        print '### Cleaning image directories of empty sub-directories [Running clean_dirs.py]'
         cd=clean_dirs.DirCleaner()
         mvcovers=os.path.join(workdir,'meta_caches','themoviedb','covers')
         cd.DelEmptyFolders(mvcovers)
+
+
+        print '### Container Making is Finished ###'
 
     def _del_metadir(self,path):
         #pass me the path the meta_caches is in
@@ -186,9 +223,8 @@ class MetaContainer:
 
             else:                
                 print 'Extraction success!'
-                    
-                
-
+     
+            
         
     def Install_Icefilms_Container(self,workingdir,containerpath,dbtype,installtype):
 
@@ -196,12 +232,13 @@ class MetaContainer:
         
         if xbmc_imported==True:
 
-            if dbtype=='tvdb' or dbtype=='themoviedb':
+            if dbtype=='tvshow' or dbtype=='movie':
 
                 if installtype == 'database' or installtype == 'covers' or installtype == 'backdrops':
 
                     meta_caches=os.path.join(workingdir,'meta_caches')
-                    cachepath=os.path.join(meta_caches,dbtype)
+                    imgspath=os.path.join(meta_caches,dbtype)
+                    cachepath=os.path.join(meta_caches,'video_cache.db')
 
                     if not os.path.exists(meta_caches):
                         #create the meta folders if they do not exist
@@ -209,22 +246,21 @@ class MetaContainer:
 
                     if installtype=='database':
                         #delete old db files
-                        if dbtype=='themoviedb':
-                            try:
-                                os.remove(os.path.join(cachepath,'movie_cache.db'))
-                            except:
-                                pass
+                        try:
+                            os.remove(cachepath)
+                        except:
+                            pass
 
                         #extract the db zip to 'themoviedb' or 'TVDB'
-                        self._extract_zip(containerpath,cachepath)
+                        self._extract_zip(containerpath,meta_caches)
 
                     if installtype=='covers' or installtype=='backdrops':
                         #delete old folders
-                        deleted=self._del_path(os.path.join(cachepath,installtype))
+                        deleted=self._del_path(os.path.join(imgspath,installtype))
 
-                        #extract the covers or backdrops folder zip to 'themoviedb' or 'TVDB'
+                        #extract the covers or backdrops folder zip to 'movie' or 'tv'
                         if deleted == True:
-                                self._extract_zip(containerpath,cachepath)
+                                self._extract_zip(containerpath,imgspath)
 
                 else:
                     print 'not a valid installtype:',installtype
@@ -232,98 +268,25 @@ class MetaContainer:
 
             else:
                 print 'not a valid dbtype:',dbtype
+                print 'dbtype must be either "tv" or "movie"'
                 return False
         else:                          
             print 'Not running under xbmc :( install container function unavaliable.'
 
 
-
-
-
-
-
-    def oldInstall_Icefilms_Container(self,containerpath,installpath,installtype):
-
-        #old code
-        
-        #NOTE: This function is handled by higher level functions in the Default.py
-        #      ie. will be called several times, as a meta *update* involves updating databases and images.
-        #      (this is not the case for first metacontainer, which is just one zip file) 
-
-        try:
-            import xbmc
-        except:
-            print 'Not running under xbmc; install container function unavaliable.'
-            return False
-        else:
-            try:
-                #Unzip container to temp folder
-                tempdir=os.path.normpath(os.path.join(installpath,'temp'))
-                if not os.path.exists(tempdir):
-                    os.makedirs(tempdir)
-                containerpath=os.path.normpath(containerpath)
-
-                xbmc.executebuiltin("XBMC.Extract("+containerpath+","+tempdir+")")
-            except:
-                print 'Extraction failed!'
-                return False
-            else:                
-                #If extraction is successful;
-                temp_meta=os.path.join(tempdir,'meta_caches')
-                dest_meta=os.path.join(installpath,'meta_caches')
-
-                if installtype == 'initial':                   
-                    #Nuke the old meta_caches folder (if it exists) and install this meta_caches folder.
-                    #Will only ever delete a meta_caches folder, so is farly safe (won't delete anything it is fed)
-                    if os.path.exists(dest_meta):
-                        try:
-                            shutil.rmtree(dest_meta)
-                        except:
-                            print 'Failed to delete old meta'
-                            return False
-                        else:
-                            try:
-                                time.sleep(1)
-                                SetPermissions(tempdir)
-                                
-                                shutil.move(temp_meta,installpath)
-                            except:
-                                print 'failed to move the meta to destination'
-                                return False
-                    elif not os.path.exists(dest_meta):
-                            try:
-                                time.sleep(1)
-                                
-                                SetPermissions(tempdir)
-                                
-                                shutil.move(temp_meta,installpath)
-                            except:
-                                print 'failed to move the meta to destination...'
-                                return False
-
-                elif installtype == 'images':
-                #Merge the images from container with the user's current image folder.
-                #THIS WILL BE ADDED IN A FUTURE RELEASE
-                    pass
-
-                elif installtype == 'databases':
-                #Nuke old database files and install the container's database files, leave images untouched.
-                #THIS WILL BE ADDED IN A FUTURE RELEASE
-                    pass
-
 def make_dirs(path):
         # make the necessary directories, without having to initialise the class (and connect to db etc)
         mainpath = get_dir(path, 'meta_caches')
 
-        tvpath = get_dir(mainpath, 'tvdb')
+        tvpath = get_dir(mainpath, 'tvshow')
         tvcovers = get_dir(tvpath, 'covers')
         tvbackdrops = get_dir(tvpath, 'backdrops')
 
-        mvpath = get_dir(mainpath, 'themoviedb')
+        mvpath = get_dir(mainpath, 'movie')
         mvcovers = get_dir(mvpath, 'covers')
         mvbackdrops = get_dir(mvpath, 'backdrops')
 
-class MovieMetaData:
+class MetaData:
     def __init__(self, path, preparezip=False):
         #this init auto-constructs necessary folder hierarchies.
 
@@ -333,13 +296,11 @@ class MovieMetaData:
         self.classmode = bool2string(preparezip)
         self.videocache = os.path.join(self.mainpath, 'video_cache.db')
 
-        self.tvpath = get_dir(self.mainpath, 'tvdb')
-        self.tvcache = os.path.join(self.tvpath, 'tv_cache.db')
+        self.tvpath = get_dir(self.mainpath, 'tvshow')
         self.tvcovers = get_dir(self.tvpath, 'covers')
         self.tvbackdrops = get_dir(self.tvpath, 'backdrops')
 
-        self.mvpath = get_dir(self.mainpath, 'themoviedb')
-        self.mvcache = os.path.join(self.mvpath, 'movie_cache.db')
+        self.mvpath = get_dir(self.mainpath, 'movie')
         self.mvcovers = get_dir(self.mvpath, 'covers')
         self.mvbackdrops = get_dir(self.mvpath, 'backdrops')
 
@@ -348,7 +309,7 @@ class MovieMetaData:
         self.dbcon.row_factory = sqlite.Row # return results indexed by field names and not numbers so we can convert to dict
         self.dbcur = self.dbcon.cursor()
 
-        # create cache db if it dont exist
+        # create cache db if it doesn't exist
         self._cache_create_movie_db()
 
     # cleanup db when object destroyed
@@ -415,12 +376,36 @@ class MovieMetaData:
 #--------------------------------Start of Movie cache handling code ----------------#
 
         
-    def get_movie_meta(self, imdb_id, type, name, ice_id, refresh=False):
+    def get_meta(self, imdb_id, type, name, ice_url, refresh=False):
 
         # add the tt if not found. integer aware.
         imdb_id=str(imdb_id)
         if not imdb_id.startswith('tt'):
                 imdb_id = "tt%s" % imdb_id
+
+        ### make the ice_id from the ice_url
+
+        if type == 'movie':
+            # get ice_id from url
+            ice_id=str(ice_url).replace('http://www.icefilms.info/ip.php?v=','')
+            if len(ice_id) > 0:
+                if ice_id.endswith('&') is False:
+                    ice_id = ice_id + '&'
+                    print ice_id
+            else:
+                ice_id = ''
+                print 'Could not find the url ice_id for movie: ',name
+                
+# stupid fix for movies with no imdb_id *** to-check ***   !!!!!!!!!!!!!!!!!!!!!!!! This fix needs to be removed ASAP, and the actual underlying problem dealt with.
+            if imdb_id == 'None':
+                imdb_id = ice_id
+
+        elif type == 'tvshow':
+            # get ice_id from url
+            ice_id=str(ice_url).replace('http://www.icefilms.info/tv/series/','')
+            if len(ice_id) == 0 or ice_id is None:
+                ice_id = ''
+                print 'Could not find the url ice_id for tv show: ',name
 
         if refresh:
             meta=None
@@ -432,7 +417,6 @@ class MovieMetaData:
             #print "adding to cache and getting metadata from web"
             meta = self._get_tmdb_meta_data(imdb_id,type, name)
             meta['watched'] = self.get_watched( imdb_id, 'movie')
-            #meta['plot']=cleanUnicode(str(meta['plot']))
             self._cache_save_movie_meta(meta, type)
 
             #if creating a metadata container, download the images.
