@@ -5,3 +5,4 @@ This should be installed automatically when stable release is installed from goo
 You can also get them from http://code.google.com/p/anarchintosh-projects/downloads/list
 
 Megaroutines is scheduled to be replaced with videourlresolver module, when it is stable.
+For *most* sources this will enable support for lower quality streaming from megavid, which is useful for netbook users and lower bandwidth consumption.
