@@ -199,9 +199,8 @@ def DLDirStartup(selfAddon):
 
           else:
               #IF DIRECTORIES EXIST, CLEAN DIRECTORY STRUCTURE (REMOVE EMPTY DIRECTORIES)
-               cl=clean_dirs.DirCleaner()
-               cl.DelEmptyFolders(tvpath)
-               cl.DelEmptyFolders(moviepath)
+               clean_dirs.do_clean(tvpath)
+               clean_dirs.do_clean(moviepath)
 
 
 def LoginStartup(selfAddon):

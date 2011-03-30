@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # Copyright (c) 2005 Marc Butler.
 
-# Hacked by Anarchintosh to run as a class.
-# Used in Icefilms plugin to keep the download dir tidy.
+# Hacked by Anarchintosh to run as a function.
+# Used in Icefilms plugin to keep the download directory tidy.
 
 # Search for and delete empty directories. If deleting
 # an empty directory 'empties' it's parent dir. The parent
@@ -10,9 +10,7 @@
 
 # Remove all empty directories under dir.
 
-import re
 import os
-import sys
 import shutil
 
 def FindEmptyDirs (dirlist, dirname, filenames):
@@ -32,9 +30,8 @@ def UnwindingDelete (emptydir):
     os.rmdir(emptydir)
     UnwindingDelete(os.path.split(emptydir)[0])
 
-class DirCleaner:
-
-     def DelEmptyFolders(self,mypath):
+####Call the below function####
+def do_clean(mypath):
          leaves = []
          os.path.walk(mypath, FindEmptyDirs, leaves)
          print 'Found and deleted %d empty dirs.' % (len(leaves))

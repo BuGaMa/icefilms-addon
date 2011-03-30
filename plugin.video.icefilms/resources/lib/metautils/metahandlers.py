@@ -171,9 +171,8 @@ class MetaContainer:
         print ' '
 
         print '### Cleaning image directories of empty sub-directories [Running clean_dirs.py]'
-        cd=clean_dirs.DirCleaner()
         mvcovers=os.path.join(workdir,'meta_caches','themoviedb','covers')
-        cd.DelEmptyFolders(mvcovers)
+        clean_dirs.do_clean(mvcovers)
 
 
         print '### Container Making is Finished ###'
