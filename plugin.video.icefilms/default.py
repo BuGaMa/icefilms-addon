@@ -30,7 +30,6 @@ sys.path.append( os.path.join( icepath, 'resources', 'lib' ) )
 
 #imports of things bundled in the addon
 import container_urls,clean_dirs,htmlcleaner,megaroutines
-from icescrapers import *
 from metautils import metahandlers
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
