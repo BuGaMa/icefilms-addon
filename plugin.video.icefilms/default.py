@@ -412,7 +412,11 @@ def prepare_list(directory,dircontents):
 
      #sort list alphabetically and return it.
      tupleList = [(x.lower(), x) for x in stringList]
-     tupleList.sort()
+
+     #wesaada's patch for ignoring The etc when sorting favourites list.
+     articles = ("a","an","the")
+     tupleList.sort(key=lambda s: tuple(word for word in s[1].split() if word.lower() not in articles))
+
      return [x[1] for x in tupleList]
 
 def favRead(string):
