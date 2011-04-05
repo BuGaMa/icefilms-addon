@@ -30,6 +30,7 @@ sys.path.append( os.path.join( icepath, 'resources', 'lib' ) )
 
 #imports of things bundled in the addon
 import container_urls,clean_dirs,htmlcleaner,megaroutines
+from icescrapers import *
 from metautils import metahandlers
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
@@ -751,12 +752,14 @@ def CLEANSEARCH(name):
         name=re.sub('DivX','',name)
         name=re.sub('-  Episode  List','- Episode List',name)
         name=re.sub('-Episode  List','- Episode List',name)
-        name=re.sub('&#39;',"'",name)
-        name=re.sub('&amp;','&',name)
+        
         return name
 
-def CLEANUP(name):
-    # clean names of annoying garbled text
+def CLEANUP_FOR_META(name):
+    #cleaner for when using a name for a metadata lookup
+     
+    name=re.sub('&#39;',"'",name)
+    name=re.sub('&amp;','&',name)
     name=re.sub('&#xC6;','AE',name)
     name=re.sub('&#x27;',"'",name)
     name=re.sub('&#xED;','i',name)
@@ -764,8 +767,6 @@ def CLEANUP(name):
     name=re.sub('&#xBD;',' 1/2',name)
     name=re.sub('&#x26;','&',name)
     name=re.sub('&#x22;','',name)
-    name=re.sub('</a>','',name)
-    name=re.sub('<b>HD</b>',' *HD*',name)
     name=re.sub('&#xF4;','o',name)
     name=re.sub('&#xE9;',"e",name)
     name=re.sub('&#xEB;',"e",name)
@@ -775,6 +776,19 @@ def CLEANUP(name):
     name=re.sub('&apos;',"'",name)
     name=re.sub('&#xE1;',"a",name)
     name=re.sub('&#xFC;',"u",name)
+
+    #run the unicode cleaner, but strip unicode to ASCII
+    name = htmlcleaner.clean(name,strip=True)
+
+    return name
+
+
+def CLEANUP(name):
+    # clean names of annoying garbled text
+    
+    name=re.sub('</a>','',name)
+    name=re.sub('<b>HD</b>',' *HD*',name)
+    
     name=re.sub('"',"'",name)
     
     #print 'name after cleanup =' + name
@@ -2107,7 +2121,8 @@ def getMeta(scrape, mode):
     #check settings over whether to display the number of episodes next to tv show name.
     show_num_of_eps=selfAddon.getSetting('display-show-eps')
     
-    print scrape
+    #print scrape
+
     #add without metadata -- imdb is still passed for use with Add to Favourites
     if use_meta==False or meta_setting=='false':
         for imdb_id,url,name in scrape:
@@ -2140,12 +2155,12 @@ def ADD_ITEM(imdb_id,url,name,num_of_eps=False):
             if mode==100:
                 
                 #return the metadata dictionary
-                meta=metaget.get_meta(imdb_id, 'movie', name, url)
+                meta=metaget.get_meta(imdb_id, 'movie', CLEANUP_FOR_META(name), url)
 
             elif mode==12:
                 
                 #return the metadata dictionary
-                meta=metaget.get_meta(imdb_id, 'tvshow', name, url)
+                meta=metaget.get_meta(imdb_id, 'tvshow', CLEANUP_FOR_META(name), url)
 
             #append number of episodes to the display name, AFTER THE NAME HAS BEEN USED FOR META LOOKUP
             if num_of_eps is not False:
