@@ -10,6 +10,7 @@ Special thanks to westcoast13 for joining the project and making this release po
   - download in background
   - fixed problems with special characters on windows filesystems
   - fixed favourites
+  - added setting to display number of episodes on icefilms for a show
 
 v1.0.6 (Tuesday, 15 March 2011):
   - added source type art

@@ -914,8 +914,14 @@ def MOVIEINDEX(url):
 
 def TVINDEX(url):
     #Indexer for TV Shows only.
+
     link=GetURL(url)
-    match=re.compile('<a name=i id=(.+?)></a><img class=star><a href=/(.+?)>(.+?)</a>').findall(link)
+
+    #list scraper now tries to get number of episodes on icefilms for show. this only works in A-Z.
+    match=re.compile('<a name=i id=(.+?)></a><img class=star><a href=/(.+?)>(.+?)</a>(.+?)br>').findall(link)
+    match[3]=re.sub('<','',match[3])
+    match[3]=re.sub('isode','',match[3])#turn Episode{s} into Ep(s)
+
     getMeta(match, 12)
     print 'TVindex loader'
     
@@ -934,7 +940,20 @@ def TVSEASONS(url, imdb_id):
         #Save the tv show name for use in special download directories.
         tvshowname=handle_file('mediatvshowname','')
         match=re.compile('<h1>(.+?)<a class').findall(source)
-        save(tvshowname,match[0])  
+        save(tvshowname,match[0])
+
+        # get and save the TV Show poster link
+        try:
+          imgcheck1 = re.search('<a class=img target=_blank href=', link)
+          imgcheck2 = re.search('<iframe src=http://referer.us/f/\?url=', link)
+          if imgcheck1 is not None:
+               match4=re.compile('<a class=img target=_blank href=(.+?)>').findall(link)
+               save(posterfile,match4[0])
+          if imgcheck2 is not None:
+               match5=re.compile('<iframe src=http://referer.us/f/\?url=(.+?) width=').findall(link)
+               save(posterfile,match5[0])
+        except:
+          pass
         
         ep_list = str(BeautifulSoup(source).find("span", { "class" : "list" } ))
 
@@ -1040,12 +1059,12 @@ def LOADMIRRORS(url):
      # get and save poster link
      try:
           imgcheck1 = re.search('<img width=250 src=', link)
-          imgcheck2 = re.search('/noref.php\?url=', link)
+          imgcheck2 = re.search('<iframe src=/noref.php\?url=', link)
           if imgcheck1 is not None:
                match4=re.compile('<img width=250 src=(.+?) style').findall(link)
                save(posterfile,match4[0])
           if imgcheck2 is not None:
-               match5=re.compile('/noref.php\?url=(.+?) width=').findall(link)
+               match5=re.compile('<iframe src=/noref.php\?url=(.+?) width=').findall(link)
                save(posterfile,match5[0])
      except:
           pass
@@ -2081,6 +2100,9 @@ def getMeta(scrape, mode):
     meta_path=os.path.join(translatedicedatapath,'meta_caches')
     use_meta=os.path.exists(meta_path)
     meta_setting = selfAddon.getSetting('use-meta')
+    #check settings over whether to display the number of episodes next to tv show name.
+    show_num_of_eps=selfAddon.getSetting('display-show-eps')
+    
     print scrape
     #add without metadata -- imdb is still passed for use with Add to Favourites
     if use_meta==False or meta_setting=='false':
@@ -2093,9 +2115,17 @@ def getMeta(scrape, mode):
     
         #initialise meta class before loop
         metaget=metahandlers.MetaData(translatedicedatapath)
-        
-        for imdb_id,url,name in scrape:
-    
+
+        #determine whether to show number of eps
+        if scrape[3] and show_num_of_eps == 'true' and mode == 12:         
+             for imdb_id,url,name,num_of_eps in scrape:
+                  ADD_ITEM(imdb_id,url,name,num_of_eps)
+        else:
+             for imdb_id,url,name in scrape:
+                  ADD_ITEM(imdb_id,url,name)
+
+
+def ADD_ITEM(imdb_id,url,name,num_of_eps=False):    
             #clean name of unwanted stuff
             name=CLEANUP(name)
             if url.startswith('http://www.icefilms.info') == False:
@@ -2112,14 +2142,18 @@ def getMeta(scrape, mode):
                 
                 #return the metadata dictionary
                 meta=metaget.get_meta(imdb_id, 'tvshow', name, url)
-    
+
+            #append number of episodes to the display name, AFTER THE NAME HAS BEEN USED FOR META LOOKUP
+            if num_of_eps is not False:
+                 name = name + ' ' + num_of_eps
+                 
             #debugs
             print 'meta_name:'+str(name)
             #print 'meta_imdb_id:'+str(imdb_id)
             #print 'meta_video_url:'+str(url)
             #print 'meta_data:'+str(meta)
             #print 'meta_imdb_id:',meta['imdb_id']
-           
+
             if meta is None:
                 #add directories without meta
                 addDir(name,url,mode,'')

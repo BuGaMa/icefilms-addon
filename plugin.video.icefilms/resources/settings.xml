@@ -1,11 +1,13 @@
 <settings>
    <category label="Menus">
 	<setting id="hide-homepage" type="bool" label="30100" default="false"/>
-	<setting id="use-meta" type="bool" label="30101" default="true"/>
-	<setting id="flatten-single-season" type="bool" label="30102" default="true"/>
+    <!-- For Xbox releases set use-meta:  default="false and "visible="false" -->
+	<setting id="use-meta" type="bool" label="30101" default="true" visible="true">
+    <setting id="flatten-single-season" type="bool" label="30102" default="true"/>
 	<setting id="flatten-source-type" type="bool" label="30103" default="true"/>
 	<setting id="hide-2shared" type="bool" label="30105" default="true"/>
 	<setting id="stack-multi-part" type="bool" label="30106" default="true" visible="false"/>
+    <setting id="display-show-eps" type="bool" label="30107" default="true"/>
    </category>
    <category label="Megaupload">
 	<setting id="megaupload-account" type="bool" label="30200" default="false"/>
