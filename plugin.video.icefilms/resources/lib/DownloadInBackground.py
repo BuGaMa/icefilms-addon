@@ -27,7 +27,7 @@ DeleteIncomplete = 'true'
 #DeleteIncomplete=selfAddon.getSetting('delete-incomplete-downloads')
 playFile = True
 
-art = os.getcwd() + '/resources/art'
+art = os.path.join( os.getcwd() ,'..','art')
 NotifyPercents = range(0, 100 + NotifyPercent, NotifyPercent)
 start_time = time.time()
 
