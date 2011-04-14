@@ -2131,25 +2131,25 @@ def getMeta(scrape, mode):
     #add with metadata
     elif use_meta==True and meta_setting=='true':
     
-        #initialise meta class before loop
-        metaget=metahandlers.MetaData(translatedicedatapath)
-
         #determine whether to show number of eps
         if scrape[3] and show_num_of_eps == 'true' and mode == 12:         
-             for imdb_id,url,name,num_of_eps in scrape:
-                  ADD_ITEM(imdb_id,url,name,num_of_eps)
+            for imdb_id,url,name,num_of_eps in scrape:
+                ADD_ITEM(imdb_id,url,name,mode,num_of_eps)
         else:
-             for imdb_id,url,name in scrape:
-                  ADD_ITEM(imdb_id,url,name)
+            for imdb_id,url,name in scrape:
+                ADD_ITEM(imdb_id,url,name,mode)
 
 
-def ADD_ITEM(imdb_id,url,name,num_of_eps=False):    
+def ADD_ITEM(imdb_id,url,name,mode,num_of_eps=False):    
             #clean name of unwanted stuff
             name=CLEANUP(name)
             if url.startswith('http://www.icefilms.info') == False:
                 url=iceurl+url
             meta = {}
-
+            
+            #initialise meta class before loop
+            metaget=metahandlers.MetaData(translatedicedatapath)
+            
             #return the metadata dictionary
             if mode==100:
                 
@@ -2163,7 +2163,7 @@ def ADD_ITEM(imdb_id,url,name,num_of_eps=False):
 
             #append number of episodes to the display name, AFTER THE NAME HAS BEEN USED FOR META LOOKUP
             if num_of_eps is not False:
-                 name = name + ' ' + num_of_eps
+                name = name + ' ' + num_of_eps
                  
             #debugs
             print 'meta_name:'+str(name)
@@ -2201,7 +2201,7 @@ def REFRESH(url,imdb_id,name,dirmode):
         elif use_meta==True and meta_setting=='true':
              
             #initialise meta class before loop
-            metaget=metahandlers.MovieMetaData(translatedicedatapath)
+            metaget=metahandlers.MetaData(translatedicedatapath)
             
             #for imdb_id,url,name in scrape:
                 
@@ -2223,7 +2223,7 @@ def REFRESH(url,imdb_id,name,dirmode):
                     ice_id = ''
                     print 'Could not find the url ice_id for video ' + name
                 #return the metadata dictionary
-                meta=metaget.get_movie_meta(imdb_id, 'movie', name, ice_id, refresh=True)
+                meta=metaget.get_meta(imdb_id, 'movie', name, ice_id, refresh=True)
             elif dirmode==12:
                 # get ice_id from url
                 ice_id=str(url).replace('http://www.icefilms.info/tv/series/','')
@@ -2231,7 +2231,7 @@ def REFRESH(url,imdb_id,name,dirmode):
                     ice_id = ''
                     print 'Could not find the url ice_id for tv show ' + name
                 #return the metadata dictionary
-                meta=metaget.get_movie_meta(imdb_id, 'tvshow',name, ice_id, refresh=True)
+                meta=metaget.get_meta(imdb_id, 'tvshow',name, ice_id, refresh=True)
                
             #debugs
             print 'meta_name:'+str(name)
