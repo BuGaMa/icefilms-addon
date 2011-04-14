@@ -9,7 +9,7 @@ import urllib, urllib2,re
 #from pprint import pprint
 
 from thetvdbapi import TheTVDB            
-
+#from string import maketrans,translate
 
 class TMDB(object):
     def __init__(self, api_key='b91e899ce561dd19695340c3b26e0a02', view='json', lang='en'):
@@ -20,14 +20,26 @@ class TMDB(object):
         self.url_prefix = 'http://api.themoviedb.org/2.1'
 
     def cleanUnicode(self, string):
+        '''
+        #Unfortunately, this isn't working for unicodes, but these must be all the characters that need replacing
+        #Maybe i'll try to make a method similar to the translate, later
+        #Also these : \xC4"=>"Ae", "\xC6"=>"AE", "\xD6"=>"Oe", "\xDC"=>"Ue", "\xDE"=>"TH", "\xDF"=>"ss", "\xE4"=>"ae", "\xE6"=>"ae", "\xF6"=>"oe", "\xFC"=>"ue", "\xFE"=>"th"
+        intab = "\xA1\xAA\xBA\xBF\xC0\xC1\xC2\xC3\xC5\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1\xD2\xD3\xD4\xD5\xD8\xD9\xDA\xDB\xDD\xE0\xE1\xE2\xE3\xE5\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF8\xF9\xFA\xFB\xFD\xFF"
+        outtab = "!ao?AAAAACEEEEIIIIDNOOOOOUUUYaaaaaceeeeiiiidnooooouuuyy"
+        trantab = maketrans(intab, outtab)
+        
+        strr = string
+        return translate(strr, trantab)
+        '''
         try:
-           string = string.replace("'","").replace(unicode(u'\u201c'), '"').replace(unicode(u'\u201d'), '"').replace(unicode(u'\u2019'),'').replace(unicode(u'\u2026'),'...').replace(unicode(u'\u2018'),'').replace(unicode(u'\u2013'),'-')
-           return string
+            string = string.replace("'","").replace(unicode(u'\xe3'), 'a').replace(unicode(u'\xe2'), 'a').replace(unicode(u'\xe0'), 'a').replace(unicode(u'\xe1'), 'a').replace(unicode(u'\xe8'), 'e').replace(unicode(u'\xc6'), 'AE').replace(unicode(u'\u2014'), '-').replace(unicode(u'\xe9'), 'e').replace(unicode(u'\u201c'), '"').replace(unicode(u'\u201d'), '"').replace(unicode(u'\u2019'),'').replace(unicode(u'\u2026'),'...').replace(unicode(u'\u2018'),'').replace(unicode(u'\u2013'),'-')
+            return string
         except:
-           return string  
+            return string  
        
     def _do_request(self, method, values):
         url = "%s/%s/%s/%s/%s/%s" % (self.url_prefix, method, self.lang, self.view, self.api_key, values)
+        print url
         try:
             meta = simplejson.load(urllib.urlopen(url))[0]
         except:
@@ -231,7 +243,13 @@ class TMDB(object):
                         meta['actors'] = meta['actors'] + ', ' + temp.get('name','')
                         if num == 4: # Read only first 5 actors, there might be a lot of them
                             break
-
+            #print meta
+            meta['actors'] = self.cleanUnicode(meta['actors'])
+            # Read overview only when in English Language, to avoid some unicode errors
+            if meta['language'] != 'en':
+                meta['overview'] = ''
+            else:
+                meta['overview'] = self.cleanUnicode(meta['overview'])
             #print ' Actors ' + str(meta['actors'])
             if meta['overview'] == 'None' or meta['overview'] == '' or meta['overview'] == 'TBD' or meta['overview'] == 'No overview found.' or meta['rating'] == 0 or meta['runtime'] == 0 or str(meta['genres']) == '[]' or str(meta['posters']) == '[]' or meta['actors'] == '':
                 print ' Some info missing in  tmdb for Movie *** '+ imdb_id + ' ***. Will search imdb for more'
