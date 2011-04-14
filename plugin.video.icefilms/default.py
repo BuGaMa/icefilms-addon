@@ -439,7 +439,7 @@ def addFavourites(enablemetadata,directory,dircontents,contentType):
     stringlist=prepare_list(directory,dircontents)
     
     if enablemetadata == True:
-        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        metaget=metahandlers.MetaData(translatedicedatapath)
          
     #for each string
     for thestring in stringlist:
@@ -463,7 +463,7 @@ def addFavourites(enablemetadata,directory,dircontents,contentType):
                     print ice_id
                     
                     #return the metadata dictionary
-                    meta=metaget.get_movie_meta(info[3], contentType, info[0], ice_id)
+                    meta=metaget.get_meta(info[3], contentType, info[0], ice_id)
                     
                     if meta is None:
                         #add all the items without meta
@@ -975,7 +975,7 @@ def TVSEASONS(url, imdb_id):
         season_list=re.compile('<h4>(.+?)</h4>').findall(ep_list)
         listlength=len(season_list)
         if listlength > 0:
-            metaget=metahandlers.MovieMetaData(translatedicedatapath)
+            metaget=metahandlers.MetaData(translatedicedatapath)
             metas = metaget.getSeasonCover(imdb_id, season_list, refresh=False)
         num = 0
         for seasons in season_list:
@@ -1474,9 +1474,12 @@ def WaitIf():
                #isice = re.search('.megaupload', currentvid)
                 xbmc.Player().stop()
 
-def cleanFilename(file):
+def cleanFilename(file, isPath=False):
     #Clean filename of not os allowed characters (replace with '_'
     file=file.replace(':','_').replace('<','_').replace('>','_').replace('*','_').replace('"','_').replace('|','_').replace('?','_')
+    # if this isn't a path clean special path characters too
+    if isPath == False:
+        file=file.replace('/','_').replace('\\','_')
     print file
     
     return file
@@ -1511,7 +1514,7 @@ def Get_Path(srcname,vidname):
 
           if SpecialDirs == 'true':
                mediapath=os.path.normpath(handle_file('mediapath','open'))
-               mediapath = cleanFilename(mediapath)
+               mediapath = cleanFilename(mediapath, isPath=True)
                mediapath=os.path.join(initial_path,mediapath)              
                
                if not os.path.exists(mediapath):
@@ -2269,7 +2272,7 @@ def get_episode(season, episode, imdb_id, url):
         #add with metadata
         elif use_meta==True and meta_setting=='true':
             #initialise meta class before loop
-            metaget=metahandlers.MovieMetaData(translatedicedatapath) 
+            metaget=metahandlers.MetaData(translatedicedatapath) 
             
             #clean name of unwanted stuff
             episode=CLEANUP(episode)
@@ -2308,7 +2311,7 @@ def get_episode(season, episode, imdb_id, url):
 def find_meta_for_search_results(results, mode, search=''):
     if mode == 100:
         #initialise meta class before loop
-        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        metaget=metahandlers.MetaData(translatedicedatapath)
         for res in results:
             name=res.title.encode('utf8')
             name=CLEANSEARCH(name)
@@ -2335,7 +2338,7 @@ def find_meta_for_search_results(results, mode, search=''):
                 addDir(name,url,100,'',searchMode=True)
     elif mode == 12:
         #initialise meta class before loop
-        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        metaget=metahandlers.MetaData(translatedicedatapath)
         for myurl,interim,name in results:
             if len(interim) < 80:
                 name=CLEANSEARCH(name)                              
@@ -2419,7 +2422,7 @@ def SearchForTrailer(search, imdb_id, type, manual=False):
             % str(trailer_url)[str(trailer_url).rfind("v=")+2:] )
         
         #dialog.ok(' title ', ' message ')
-        metaget=metahandlers.MovieMetaData(translatedicedatapath)
+        metaget=metahandlers.MetaData(translatedicedatapath)
         if type==100:
             type='movie'
         elif type==12:
@@ -2428,7 +2431,7 @@ def SearchForTrailer(search, imdb_id, type, manual=False):
         xbmc.executebuiltin("XBMC.Container.Refresh")
 
 def ChangeWatched(imdb_id, videoType, name, season):
-    metaget=metahandlers.MovieMetaData(translatedicedatapath)
+    metaget=metahandlers.MetaData(translatedicedatapath)
     metaget.change_watched(imdb_id, videoType, name, season)
     xbmc.executebuiltin("XBMC.Container.Refresh")
 
