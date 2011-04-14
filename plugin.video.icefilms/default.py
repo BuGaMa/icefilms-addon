@@ -936,9 +936,7 @@ def TVINDEX(url):
 
     #list scraper now tries to get number of episodes on icefilms for show. this only works in A-Z.
     match=re.compile('<a name=i id=(.+?)></a><img class=star><a href=/(.+?)>(.+?)</a>(.+?)br>').findall(link)
-    match[3]=re.sub('<','',match[3])
-    match[3]=re.sub('isode','',match[3])#turn Episode{s} into Ep(s)
-
+    
     getMeta(match, 12)
     print 'TVindex loader'
     
@@ -2134,7 +2132,12 @@ def getMeta(scrape, mode):
         #determine whether to show number of eps
         if scrape[3] and show_num_of_eps == 'true' and mode == 12:         
             for imdb_id,url,name,num_of_eps in scrape:
+                num_of_eps=re.sub('<','',num_of_eps)
+                num_of_eps=re.sub('isode','',num_of_eps)#turn Episode{s} into Ep(s)
                 ADD_ITEM(imdb_id,url,name,mode,num_of_eps)
+        elif mode == 12: # fix for tvshows with num of episodes disabled
+            for imdb_id,url,name,num_of_eps in scrape:
+                ADD_ITEM(imdb_id,url,name,mode)
         else:
             for imdb_id,url,name in scrape:
                 ADD_ITEM(imdb_id,url,name,mode)
