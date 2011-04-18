@@ -1,29 +1,32 @@
 <settings>
    <category label="Menus">
-	<setting id="hide-homepage" type="bool" label="30100" default="false"/>
+    <setting id="hide-homepage" type="bool" label="30100" default="false"/>
+        
     <!-- For Xbox releases set use-meta:  default="false and "visible="false" -->
 	<setting id="use-meta" type="bool" label="30101" default="true" visible="true"/>
-    <setting id="flatten-single-season" type="bool" label="30102" default="true"/>
+        
+	<setting id="flatten-single-season" type="bool" label="30102" default="true"/>
 	<setting id="flatten-source-type" type="bool" label="30103" default="true"/>
 	<setting id="hide-2shared" type="bool" label="30105" default="true"/>
 	<setting id="stack-multi-part" type="bool" label="30106" default="true" visible="false"/>
-    <setting id="display-show-eps" type="bool" label="30107" default="true"/>
+        
+	<setting id="display-show-eps" type="bool" label="30107" default="true"/>
    </category>
    <category label="Megaupload">
 	<setting id="megaupload-account" type="bool" label="30200" default="false"/>
 	<setting id="megaupload-username" type="text" label="30201" default="" enable="!eq(-1,false)"/>
 	<setting id="megaupload-password" type="text" label="30202" default="" option="hidden" enable="!eq(-2,false)"/>
 	<setting id="hide-successful-login-messages" type="bool" label="30203" default="false" enable="!eq(-3,false)"/>
-        <setting id="prefer-megavideo" type="bool" label="30204" default="false" visible="false"/>
+    <setting id="prefer-megavideo" type="bool" label="30204" default="false" visible="false"/>
    </category>
    <category label="Downloads">
-        <setting id="download-folder" type="folder" label="30300" default=""/>
-        <setting id="use-special-structure" type="bool" label="30301" default="true"/>
-        <setting id="delete-incomplete-downloads" type="bool" label="30302" default="true"/>
-        <!-- In Background -->
-        <setting type="sep" />
-        <setting id="download-in-background" type="bool" label="30303" default="true" />
-        <setting id="notify-percent" enable="eq(-1,true)" label="30304" type="enum" values="2[B] %[/B]|5[B] %[/B]|10[B] %[/B]|20[B] %[/B]|25[B] %[/B]|50[B] %[/B]|100[B] %[/B]" default="3" />
+    <setting id="download-folder" type="folder" label="30300" default=""/>
+    <setting id="use-special-structure" type="bool" label="30301" default="true"/>
+    <setting id="delete-incomplete-downloads" type="bool" label="30302" default="true"/>
+    <!-- In Background -->
+    <setting type="sep" />
+    <setting id="download-in-background" type="bool" label="30303" default="true" />
+    <setting id="notify-percent" enable="eq(-1,true)" label="30304" type="enum" values="2[B] %[/B]|5[B] %[/B]|10[B] %[/B]|20[B] %[/B]|25[B] %[/B]|50[B] %[/B]|100[B] %[/B]" default="3" />
    </category>
    <category label="Auto-View">
 	<setting id="auto-view" type="bool" label="30400" default="false"/>

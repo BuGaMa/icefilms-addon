@@ -7,7 +7,7 @@ For TVDB it currently uses a modified version of
 Python API by James Smith (http://loopj.com)
 They can both be found in the same folder.
 
-*This Metahandlers was created for Icefilms addon Release v1.1.0
+*This Metahandlers was created for Icefilms addon Release v1.2.0
 
 *Credits: Daledude / Anarchintosh / WestCoast13 
 
@@ -34,6 +34,10 @@ import shutil
 sys.path.append((os.path.split(os.getcwd()))[0])
 
 import clean_dirs
+
+# NOTE: this is imported later on in the create container function:
+# from cleaners import *
+
 
 try:
     import xbmc
@@ -94,7 +98,7 @@ def TVShow_URL_List():
 
         finallist=[]
 
-        #Generate A-Z icefilms movie url list and return it
+        #Generate A-Z icefilms tvshow url list and return it
         AZ=list([chr(i) for i in xrange(ord('A'), ord('Z')+1)])
         AZ.append('1')
         for theletter in AZ:
@@ -128,6 +132,8 @@ class MetaContainer:
 
     def Create_Icefilms_Container(self,outpath):
 
+        from cleaners import *
+
         ####  Create a full metadata cache  ####
         # Note: please update this with the latest code from MOVIEINDEX and TVINDEX  (from default.py)
 
@@ -148,13 +154,16 @@ class MetaContainer:
         #scrape A-Z of all movies on icefilms.
         mvinks=Movie_URL_List()
         for myaz in mvinks:
-            print '### GETTING METADATA FOR ALL ENTRIES ON: '+myaz
+            print '### GETTING MOVIE METADATA FOR ALL ENTRIES ON: '+myaz
             link=GetURL(myaz)
             link = re.sub('<a name=i id=>','<a name=i id=None>',link)
             match=re.compile('<a name=i id=(.+?)></a><img class=star><a href=/(.+?)>(.+?)<br>').findall(link)
 
             #For all results run the class
             for imdb_id,url,name in match:
+                name=CLEANUP(name)
+                if url.startswith('http://www.icefilms.info') == False:
+                    url=iceurl+url
                 meta.get_movie_meta(imdb_id)
 
         print '### FINISHED Adding movies to database ###'
@@ -164,7 +173,18 @@ class MetaContainer:
         print '### Adding TV Shows to database ###'
         print ' '
         print ' '
+        
+        #scrape A-Z of all tv shows on icefilms.
+        tvinks=TVShow_URL_List()
+        for myaz in tvlinks:
+            print '### GETTING TVSHOW METADATA FOR ALL ENTRIES ON: '+myaz
+            link=GetURL(myaz)
+            link = re.sub('<a name=i id=>','<a name=i id=None>',link)
+            match=re.compile('<a name=i id=(.+?)></a><img class=star><a href=/(.+?)>(.+?)</a>').findall(link)
 
+            #For all results run the class
+            for imdb_id,url,name in match:
+                meta.get_movie_meta(imdb_id)
 
         print '### FINISHED Adding TV Shows to database ###'
         print ' '

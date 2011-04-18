@@ -31,6 +31,7 @@ sys.path.append( os.path.join( icepath, 'resources', 'lib' ) )
 #imports of things bundled in the addon
 import container_urls,clean_dirs,htmlcleaner,megaroutines
 from metautils import metahandlers
+from cleaners import *
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
 
@@ -735,63 +736,6 @@ def DoEpListSearch(search):
         match=re.compile('<h3 class="r"><a href="'+tvurl+'(.+?)"(.+?)">(.+?)</h3>').findall(link)
         find_meta_for_search_results(match, 12, search)
 
-     
-def CLEANSEARCH(name):        
-        name=re.sub('<em>','',name)
-        name=re.sub('</em>','',name)
-        name=re.sub('DivX - icefilms.info','',name)
-        name=re.sub('</a>','',name)
-        name=re.sub('<b>...</b>','',name)
-        name=re.sub('- icefilms.info','',name)
-        name=re.sub('.info','',name)
-        name=re.sub('- icefilms','',name)
-        name=re.sub(' -icefilms','',name)
-        name=re.sub('-icefilms','',name)
-        name=re.sub('icefilms','',name)
-        name=re.sub('DivX','',name)
-        name=re.sub('-  Episode  List','- Episode List',name)
-        name=re.sub('-Episode  List','- Episode List',name)
-        
-        return name
-
-def CLEANUP_FOR_META(name):
-    #cleaner for when using a name for a metadata lookup
-     
-    name=re.sub('&#39;',"'",name)
-    name=re.sub('&amp;','&',name)
-    name=re.sub('&#xC6;','AE',name)
-    name=re.sub('&#x27;',"'",name)
-    name=re.sub('&#xED;','i',name)
-    name=re.sub('&frac12;',' 1/2',name)
-    name=re.sub('&#xBD;',' 1/2',name)
-    name=re.sub('&#x26;','&',name)
-    name=re.sub('&#x22;','',name)
-    name=re.sub('&#xF4;','o',name)
-    name=re.sub('&#xE9;',"e",name)
-    name=re.sub('&#xEB;',"e",name)
-    name=re.sub('&#248;',"o",name)
-    name=re.sub('&#xE2;',"a",name)
-    name=re.sub('&#xFB;',"u",name)
-    name=re.sub('&apos;',"'",name)
-    name=re.sub('&#xE1;',"a",name)
-    name=re.sub('&#xFC;',"u",name)
-
-    #run the unicode cleaner, but strip unicode to ASCII
-    name = htmlcleaner.clean(name,strip=True)
-
-    return name
-
-
-def CLEANUP(name):
-    # clean names of annoying garbled text
-    
-    name=re.sub('</a>','',name)
-    name=re.sub('<b>HD</b>',' *HD*',name)
-    
-    name=re.sub('"',"'",name)
-    
-    #print 'name after cleanup =' + name
-    return name
 
 def TVCATEGORIES(url):
         caturl = iceurl+'tv/'        
@@ -936,7 +880,7 @@ def TVINDEX(url):
 
     #list scraper now tries to get number of episodes on icefilms for show. this only works in A-Z.
     match=re.compile('<a name=i id=(.+?)></a><img class=star><a href=/(.+?)>(.+?)</a>(.+?)br>').findall(link)
-    
+
     getMeta(match, 12)
     print 'TVindex loader'
     
@@ -1583,7 +1527,7 @@ def do_wait(account):
      # do the necessary wait, with  a nice notice and pre-set waiting time. I have found the below waiting times to never fail.
      
      if account == 'premium':
-          return handle_wait(3,'Megaupload','Loading video with your *Premium* account.')
+          return handle_wait(4,'Megaupload','Loading video with your *Premium* account.')
 
      elif account == 'free':
           return handle_wait(26,'Megaupload Free User','Loading video with your free account.')
@@ -2132,18 +2076,21 @@ def getMeta(scrape, mode):
     #add with metadata
     elif use_meta==True and meta_setting=='true':
     
+        #initialise meta class before loop
+        metaget=metahandlers.MetaData(translatedicedatapath)
+
         #determine whether to show number of eps
         if scrape[3] and show_num_of_eps == 'true' and mode == 12:         
             for imdb_id,url,name,num_of_eps in scrape:
                 num_of_eps=re.sub('<','',num_of_eps)
                 num_of_eps=re.sub('isode','',num_of_eps)#turn Episode{s} into Ep(s)
-                ADD_ITEM(imdb_id,url,name,mode,num_of_eps)
+                ADD_ITEM(metaget,imdb_id,url,name,mode,num_of_eps)
         elif mode == 12: # fix for tvshows with num of episodes disabled
             for imdb_id,url,name,num_of_eps in scrape:
-                ADD_ITEM(imdb_id,url,name,mode)
+                ADD_ITEM(metaget,imdb_id,url,name,mode)
         else:
             for imdb_id,url,name in scrape:
-                ADD_ITEM(imdb_id,url,name,mode)
+                ADD_ITEM(metaget,imdb_id,url,name,mode)
 
 
 def ADD_ITEM(imdb_id,url,name,mode,num_of_eps=False):    
@@ -2152,10 +2099,7 @@ def ADD_ITEM(imdb_id,url,name,mode,num_of_eps=False):
             if url.startswith('http://www.icefilms.info') == False:
                 url=iceurl+url
             meta = {}
-            
-            #initialise meta class before loop
-            metaget=metahandlers.MetaData(translatedicedatapath)
-            
+
             #return the metadata dictionary
             if mode==100:
                 
@@ -2180,7 +2124,11 @@ def ADD_ITEM(imdb_id,url,name,mode,num_of_eps=False):
 
             if meta is None:
                 #add directories without meta
-                addDir(name,url,mode,'')
+                if imdb_id == None:
+                	imdb_id == ''
+                else:
+                	imdb_id = 'tt'+str(imdb_id)
+                addDir(name,url,mode,'',imdb=imdb_id)
             else:
                 #add directories with meta
                 addDir(name,url,mode,'',metainfo=meta,imdb='tt'+str(imdb_id))
