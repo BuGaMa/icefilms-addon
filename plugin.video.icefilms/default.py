@@ -2113,7 +2113,7 @@ def ADD_ITEM(imdb_id,url,name,mode,num_of_eps=False):
 
             #append number of episodes to the display name, AFTER THE NAME HAS BEEN USED FOR META LOOKUP
             if num_of_eps is not False:
-                name = name + ' ' + num_of_eps
+                name = name + ' ' + str(num_of_eps)
                  
             #debugs
             print 'meta_name:'+str(name)
