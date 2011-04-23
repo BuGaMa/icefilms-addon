@@ -41,10 +41,10 @@ def xbmcpath(path,filename):
        
 def Notify(typeq,title,message,times):
      #simplified way to call notifications. common notifications here.
-     if title is '':
+     if title == '':
           title='Icefilms Notification'
      if typeq == 'small':
-          if times is '':
+          if times == '':
                times='5000'
           smallicon=handle_file('smallicon')
           xbmc.executebuiltin("XBMC.Notification("+title+","+message+","+times+","+smallicon+")")
@@ -75,67 +75,67 @@ art = icepath+'/resources/art'
 
 def handle_file(filename,getmode=''):
     #bad python code to add a get file routine.
-    if filename is 'captcha':
+    if filename == 'captcha':
         return_file = xbmcpath(icedatapath,'CaptchaChallenge.txt')
-    elif filename is 'mirror':
+    elif filename == 'mirror':
         return_file = xbmcpath(icedatapath,'MirrorPageSource.txt')
-    elif filename is 'episodesrc':
+    elif filename == 'episodesrc':
         return_file = xbmcpath(icedatapath,'EpisodePageSource.txt')
-    elif filename is 'pageurl':
+    elif filename == 'pageurl':
         return_file = xbmcpath(icedatapath,'PageURL.txt')
     
-    elif filename is 'mediapath':
+    elif filename == 'mediapath':
         return_file = xbmcpath(downinfopath,'MediaPath.txt')
     #extra thing to provide show name with year if going via episode list.
-    elif filename is 'mediatvshowname':
+    elif filename == 'mediatvshowname':
         return_file = xbmcpath(downinfopath,'TVShowName.txt')
     #extra thing to provide season name.
-    elif filename is 'mediatvseasonname':
+    elif filename == 'mediatvseasonname':
         return_file = xbmcpath(downinfopath,'TVSeasonName.txt')
     
-    elif filename is 'videoname':
+    elif filename == 'videoname':
         return_file = xbmcpath(metapath,'VideoName.txt')
-    elif filename is 'sourcename':
+    elif filename == 'sourcename':
         return_file = xbmcpath(metapath,'SourceName.txt')
-    elif filename is 'description':
+    elif filename == 'description':
         return_file = xbmcpath(metapath,'Description.txt')
-    elif filename is 'poster':
+    elif filename == 'poster':
         return_file = xbmcpath(metapath,'Poster.txt')
-    elif filename is 'mpaa':
+    elif filename == 'mpaa':
         return_file = xbmcpath(metapath,'mpaa.txt')
-    elif filename is 'listpic':
+    elif filename == 'listpic':
         return_file = xbmcpath(metapath,'listpic.txt')
     
-    elif filename is 'smallicon':
+    elif filename == 'smallicon':
         return_file = xbmcpath(art,'smalltransparent2.png')
-    elif filename is 'homepage':
+    elif filename == 'homepage':
         return_file = xbmcpath(art,'homepage.png')
-    elif filename is 'movies':
+    elif filename == 'movies':
         return_file = xbmcpath(art,'movies.png')
-    elif filename is 'music':
+    elif filename == 'music':
         return_file = xbmcpath(art,'music.png')
-    elif filename is 'tvshows':
+    elif filename == 'tvshows':
         return_file = xbmcpath(art,'tvshows.png')
-    elif filename is 'movies_fav':
+    elif filename == 'movies_fav':
         return_file = xbmcpath(art,'movies_fav.png')
-    elif filename is 'tvshows_fav':
+    elif filename == 'tvshows_fav':
         return_file = xbmcpath(art,'tvshows_fav.png')
-    elif filename is 'other':
+    elif filename == 'other':
         return_file = xbmcpath(art,'other.png')
-    elif filename is 'search':
+    elif filename == 'search':
         return_file = xbmcpath(art,'search.png')
-    elif filename is 'standup':
+    elif filename == 'standup':
         return_file = xbmcpath(art,'standup.png')
-    elif filename is 'megapic':
+    elif filename == 'megapic':
         return_file = xbmcpath(art,'megaupload.png')
-    elif filename is 'shared2pic':
+    elif filename == 'shared2pic':
         return_file = xbmcpath(art,'2shared.png')
-    elif filename is 'localpic':
+    elif filename == 'localpic':
         return_file = xbmcpath(art,'local_file.jpg')
 
-    if getmode is '':
+    if getmode == '':
         return return_file
-    if getmode is 'open':
+    if getmode == 'open':
         try:
             opened_return_file=openfile(return_file)
             return opened_return_file
@@ -170,7 +170,7 @@ def DLDirStartup(selfAddon):
   if SpecialDirs == 'true':
      mypath=str(selfAddon.getSetting('download-folder'))
 
-     if mypath is not '' or mypath is not None:
+     if mypath != '' or mypath is not None:
  
         if os.path.exists(mypath):
           initial_path=os.path.join(mypath,'Icefilms Downloaded Videos')
@@ -224,7 +224,7 @@ def LoginStartup(selfAddon):
 
           login=mu.set_login(megauser,megapass)
                    
-          if megapass is not '' and megauser is not '':
+          if megapass != '' and megauser != '':
                if login is False:
                     print 'Account: '+'login failed'
                     Notify('big','Megaupload','Login failed. Megaupload will load with no account.','')
@@ -234,7 +234,7 @@ def LoginStartup(selfAddon):
                     if HideSuccessfulLogin == 'false':
                          Notify('small','Megaupload', 'Account login successful.','')
                          
-          if megapass is '' or megauser is '':
+          if megapass == '' or megauser == '':
                print 'no login details specified, using no account'
                Notify('big','Megaupload','Login failed. Megaupload will load with no account.','')
                                 
@@ -695,7 +695,7 @@ def SEARCH(url):
     kb.doModal()
     if (kb.isConfirmed()):
         search = kb.getText()
-        if search is not '':
+        if search != '':
             tvshowname=handle_file('mediatvshowname','')
             seasonname=handle_file('mediatvseasonname','')
             DoEpListSearch(search)
@@ -776,8 +776,8 @@ def ADDITIONALCATS(setmode,caturl):
 def PopRatLat(modeset,caturl,genre):
         if caturl == iceurl+'tv/':
              setmode = '11'
-        elif caturl is not iceurl+'tv/':
-             setmode = '2'       
+        else:
+             setmode = '2'
         addDir('Popular',caturl+'popular/'+genre,setmode,os.path.join(art,'popular.png'))
         addDir('Highly Rated',caturl+'rating/'+genre,setmode,os.path.join(art,'highly rated.png'))
         addDir('Latest Releases',caturl+'release/'+genre,setmode,os.path.join(art,'latest releases.png'))
@@ -1117,7 +1117,7 @@ def CATPCHAENTER(surl):
      kb.doModal()
      if (kb.isConfirmed()):
           userInput = kb.getText()
-          if userInput is not '':
+          if userInput != '':
                challengeToken=handle_file('captcha','open')
                print 'challenge token: '+challengeToken
                parameters = urllib.urlencode({'recaptcha_challenge_field': challengeToken, 'recaptcha_response_field': userInput})
@@ -1129,7 +1129,7 @@ def CATPCHAENTER(surl):
                     GETMIRRORS(url,link)
                elif has_recaptcha is True:
                     Notify('big', 'Text does not match captcha image!', 'To try again, close this box and then: \n Press backspace twice, and reselect your video.', '')
-          elif userInput is '':
+          elif userInput == '':
                Notify('big', 'No text entered!', 'To try again, close this box and then: \n Press backspace twice, and reselect your video.', '')               
 
 def GETMIRRORS(url,link):
@@ -1164,7 +1164,7 @@ def GETMIRRORS(url,link):
     vidname=handle_file('videoname','open')
     mypath=Get_Path(name,vidname)
     print 'MYPATH: ',mypath
-    if mypath is not 'path not set':
+    if mypath != 'path not set':
         if os.path.isfile(mypath) is True:
             localpic=handle_file('localpic','')
             addExecute('Source    | Local | Full',mypath,205,localpic)
@@ -1252,7 +1252,7 @@ def PART(scrap,sourcenumber,hide2shared,megapic,shared2pic):
                               partname='Part '+name
                               fullname=sourcestring+' | MU | '+partname
                               Add_Multi_Parts(fullname,fullurl,megapic)
-                    elif is2shared is not None and hide2shared is 'false':
+                    elif is2shared is not None and hide2shared == 'false':
                          #print sourcestring+' is hosted by 2shared' 
                          part=re.compile('&url=http://www.2shared.com/(.+?)>PART (.+?)</a>').findall(scrape)
                          for url,name in part:
@@ -1276,7 +1276,7 @@ def PART(scrap,sourcenumber,hide2shared,megapic,shared2pic):
                          #print 'Source #'+sourcenumber+' is hosted by megaupload'
                          fullname=sourcestring+' | MU | Full'
                          addExecute(fullname,url,200,megapic)
-                    elif is2shared is not None and hide2shared is 'false':
+                    elif is2shared is not None and hide2shared == 'false':
                          #print 'Source #'+sourcenumber+' is hosted by 2shared' 
                          fullname=sourcestring+' | 2S  | Full'
                          addExecute(fullname,url,200,shared2pic)
@@ -1618,7 +1618,7 @@ def Download_Source(name,url):
     selfAddon = xbmcaddon.Addon(id='plugin.video.icefilms')
        
     print 'MYPATH: ',mypath
-    if mypath is 'path not set':
+    if mypath == 'path not set':
         Notify('Download Alert','You have not set the download folder.\n Please access the addon settings and set it.','','')
     
     else:
