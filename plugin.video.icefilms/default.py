@@ -2092,8 +2092,7 @@ def getMeta(scrape, mode):
             for imdb_id,url,name in scrape:
                 ADD_ITEM(metaget,imdb_id,url,name,mode)
 
-
-def ADD_ITEM(imdb_id,url,name,mode,num_of_eps=False):    
+def ADD_ITEM(metaget,imdb_id,url,name,mode,num_of_eps=False):
             #clean name of unwanted stuff
             name=CLEANUP(name)
             if url.startswith('http://www.icefilms.info') == False:
