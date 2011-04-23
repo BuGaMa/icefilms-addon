@@ -543,7 +543,7 @@ def ADD_TO_FAVOURITES(name,url,imdbnum):
     
     if name is not None and url is not None:
     
-        #Set favourites path, and create it if it does'nt exist.
+        #Set favourites path, and create it if it doesn't exist.
         favpath=os.path.join(translatedicedatapath,'Favourites')
         tvfav=os.path.join(favpath,'TV')
         moviefav=os.path.join(favpath,'Movies')
@@ -755,7 +755,6 @@ def MUSICCATEGORIES(url):
         addDir('A-Z List',caturl+'a-z/1',setmode,os.path.join(art,'az lists.png'))
         ADDITIONALCATS(setmode,caturl)
 
-
 def STANDUPCATEGORIES(url):
         caturl = iceurl+'standup/'        
         setmode = '2'
@@ -798,7 +797,6 @@ def Genres(url):
         addDir('Romance',url,77,'')
         addDir('Sci-Fi',url,78,'')
         addDir('Thriller',url,79,'')
-      
 
 def Action(url):
      PopRatLat('2',url,'action')
@@ -830,7 +828,6 @@ def SciFi(url):
 def Thriller(url):
      PopRatLat('2',url,'thriller')
 
-        
 def MOVIEA2ZDirectories(url):
         setmode = '2'
         caturl = iceurl+'movies/a-z/'
@@ -843,8 +840,6 @@ def MOVIEA2ZDirectories(url):
         for theletter in A2Z:
              addDir (theletter,caturl+theletter,setmode,os.path.join(art,'letters',theletter+'.png'))
 
-
-
 def TVA2ZDirectories(url):
         setmode = '11'
         caturl = iceurl+'tv/a-z/'
@@ -856,8 +851,7 @@ def TVA2ZDirectories(url):
         A2Z=[chr(i) for i in xrange(ord('A'), ord('Z')+1)]
         for theletter in A2Z:
              addDir (theletter,caturl+theletter,setmode,os.path.join(art,'letters',theletter+'.png'))
-             
-     
+
 def MOVIEINDEX(url):
     #Indexer for most things. (Movies,Music,Stand-up etc) 
     
@@ -1766,7 +1760,7 @@ def _pbhook(numblocks, blocksize, filesize, dp, start_time):
    
 def addExecute(name,url,mode,iconimage):
 
-    # A list item that executes the next mode, but does'nt clear the screen of current list items.
+    # A list item that executes the next mode, but doesn't clear the screen of current list items.
 
     #encode url and name, so they can pass through the sys.argv[0] related strings
     sysname = urllib.quote_plus(name)
@@ -1868,18 +1862,24 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
         if mode == 12: # TV series
             addWatched = True
             videoType = 'tvshow'
+            if searchMode == False:
+                contextMenuItems.append(('Show Information', 'XBMC.Action(Info)'))
         elif meta.has_key('season_num'): # episode
             addWatched = True
             videoType = 'episode'
             season = meta['season']
+            if searchMode == False:
+                contextMenuItems.append(('Episode Information', 'XBMC.Action(Info)'))
         elif mode == 100: # movies
             addWatched = True
             videoType = 'movie'
+            if searchMode == False:
+                contextMenuItems.append(('Movie Information', 'XBMC.Action(Info)'))
         if addWatched:
             if meta['watched'] == 6:
                 watchedMenu='Mark as Watched'
             else:
-                watchedMenu='Mark as UnWatched'
+                watchedMenu='Mark as Unwatched'
             if searchMode==False:
                 contextMenuItems.append((watchedMenu, 'XBMC.RunPlugin(%s?mode=990&name=%s&url=%s&imdbnum=%s&videoType=%s&season=%s)' 
                     % (sys.argv[0], sysname, sysurl, urllib.quote_plus(str(imdb)), videoType, urllib.quote_plus(season))))
@@ -1913,11 +1913,11 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
         liz.addContextMenuItems(contextMenuItems, replaceItems=True)
     #########
 
-    print '          Mode =' +str(mode) + ' URL=' + str(url)
+    print '          Mode=' + str(mode) + ' URL=' + str(url)
     #Do some crucial stuff
     if total is False:
         ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
-    if total is not False:
+    else:
         ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True, totalItems=int(total))
     return ok
      
@@ -2080,7 +2080,7 @@ def getMeta(scrape, mode):
         metaget=metahandlers.MetaData(translatedicedatapath)
 
         #determine whether to show number of eps
-        if scrape[3] and show_num_of_eps == 'true' and mode == 12:         
+        if scrape[3] and show_num_of_eps == 'true' and mode == 12:
             for imdb_id,url,name,num_of_eps in scrape:
                 num_of_eps=re.sub('<','',num_of_eps)
                 num_of_eps=re.sub('isode','',num_of_eps)#turn Episode{s} into Ep(s)
@@ -2101,12 +2101,9 @@ def ADD_ITEM(metaget,imdb_id,url,name,mode,num_of_eps=False):
 
             #return the metadata dictionary
             if mode==100:
-                
                 #return the metadata dictionary
                 meta=metaget.get_meta(imdb_id, 'movie', CLEANUP_FOR_META(name), url)
-
             elif mode==12:
-                
                 #return the metadata dictionary
                 meta=metaget.get_meta(imdb_id, 'tvshow', CLEANUP_FOR_META(name), url)
 

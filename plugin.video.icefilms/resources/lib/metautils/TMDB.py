@@ -142,7 +142,7 @@ class TMDB(object):
         return images
 
     def imdbLookup(self, imdb_id, type, name):
-        # Movie.imdbLookup doesnt return all the info that Movie.getInfo does like the cast.
+        # Movie.imdbLookup doesn't return all the info that Movie.getInfo does like the cast.
         # So do a small lookup with getVersion just to get the tmdb id from the imdb id.
         # Then lookup by the tmdb id to get all the meta.
 
@@ -154,7 +154,7 @@ class TMDB(object):
 
             # if not found by imdb, try by name
             if tvdb_id == '':
-                cleaned_name = name[:(len(name)-7)]
+                cleaned_name = name[:(len(name)-7)] # strip the trailing " (yyyy)"
                 show_list=tvdb.get_matching_shows(cleaned_name)
                 #print show_list
                 tvdb_id=''
@@ -209,6 +209,7 @@ class TMDB(object):
                     print 'cover is  *** ' + meta['imdb_poster']
                     
                     print '          rating ***' + str(meta['rating'])+'!!!'
+
                     if meta['overview'] == 'None' or meta['overview'] == '' or meta['overview'] == 'TBD' or meta['overview'] == 'No overview found.' or meta['rating'] == 0 or meta['runtime'] == 0 or meta['actors'] == '' or meta['imdb_poster'] == '':
                         print ' Some info missing in TVdb for TVshow *** '+ name + ' ***. Will search imdb for more'
                         meta = self._search_imdb( meta, imdb_id)
@@ -252,7 +253,7 @@ class TMDB(object):
                 meta['overview'] = self.cleanUnicode(meta['overview'])
             #print ' Actors ' + str(meta['actors'])
             if meta['overview'] == 'None' or meta['overview'] == '' or meta['overview'] == 'TBD' or meta['overview'] == 'No overview found.' or meta['rating'] == 0 or meta['runtime'] == 0 or str(meta['genres']) == '[]' or str(meta['posters']) == '[]' or meta['actors'] == '':
-                print ' Some info missing in  tmdb for Movie *** '+ imdb_id + ' ***. Will search imdb for more'
+                print ' Some info missing in TMDb for Movie *** '+ imdb_id + ' ***. Will search imdb for more'
                 meta = self._search_imdb( meta, imdb_id)
             else:
                 meta['overview'] = 'Starring : \n' + meta['actors'] + '\n\nPlot : \n' + meta['overview']
