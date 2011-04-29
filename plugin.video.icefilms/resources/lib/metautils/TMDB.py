@@ -83,7 +83,13 @@ class TMDB(object):
 
     def _search_imdb(self, meta, imdb_id):
         url = "http://www.imdbapi.com/?i=" + imdb_id
-        link=self._getURL(url)
+
+        try:
+            link = self._getURL(url)
+        except (urllib2.HTTPError, urllib2.URLError), e:
+            print "Can't access %s: %s" % (url, e)
+            return meta
+
         print 'imdb link is ->' + link
         if link == '{"Response":"Parse Error"}':
             return meta
