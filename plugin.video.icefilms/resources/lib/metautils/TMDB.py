@@ -5,7 +5,7 @@
 # also searches imdb (using http://www.imdbapi.com/) for missing info in movies or tvshows
 
 import simplejson
-import urllib, urllib2,re
+import urllib, urllib2, re, socket
 #from pprint import pprint
 
 from thetvdbapi import TheTVDB            
@@ -86,7 +86,8 @@ class TMDB(object):
 
         try:
             link = self._getURL(url)
-        except (urllib2.HTTPError, urllib2.URLError), e:
+        # XXX don't remove any of these - all three have been encountered (in the same session)
+        except (urllib2.HTTPError, urllib2.URLError, socket.error), e:
             print "Can't access %s: %s" % (url, e)
             return meta
 
@@ -234,8 +235,10 @@ class TMDB(object):
             return meta
 
         if tmdb_id:
-            meta = {}
             meta = self._do_request('Movie.getInfo', tmdb_id)
+
+            if meta is None: # fall through to IMDB lookup
+                meta = {}
 
             tmp_cast = []
             tmp_cast = meta.get('cast', '')
