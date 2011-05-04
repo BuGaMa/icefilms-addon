@@ -1521,7 +1521,7 @@ def do_wait(account):
      # do the necessary wait, with  a nice notice and pre-set waiting time. I have found the below waiting times to never fail.
      
      if account == 'premium':
-          return handle_wait(4,'Megaupload','Loading video with your *Premium* account.')
+          return handle_wait(5,'Megaupload','Loading video with your *Premium* account.')
 
      elif account == 'free':
           return handle_wait(26,'Megaupload Free User','Loading video with your free account.')

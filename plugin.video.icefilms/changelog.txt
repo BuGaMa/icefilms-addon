@@ -1,12 +1,11 @@
 v1.1.0 (Tuesday, 15 March 2011):
-Special thanks to westcoast13 for joining the project and making this release possible!
+Special thanks to westcoast13 for joining the project and making this release possible! This is the LAST RELEASE OF ICEFILMS ADDON. VIDEOFALCON is its superceder, and will provide support for icefilms.
   - neatened up add-on file structure
   - added TV show metadata support
   - IMDB fallback scraper for failed scrapes
   - individual item metadata refresh option 
   - metadata lookups even if item does not have an imdb number
   - updated metacontainers
-  - fanart support (requires downloading the containers)
   - download in background
   - fixed problems with special characters on windows filesystems
   - fixed favourites
