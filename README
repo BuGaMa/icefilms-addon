@@ -6,3 +6,8 @@ You can also get them from http://code.google.com/p/anarchintosh-projects/downlo
 
 Megaroutines is scheduled to be replaced with videourlresolver module, when it is stable.
 For *most* sources this will enable support for lower quality streaming from megavid, which is useful for netbook users and lower bandwidth consumption.
+
+After v1.1.0, iceilms addon is scheduled to be replaced by videofalcon
+https://github.com/icefilms-xbmc/videofalcon
+
+All that really needs completing for v1.1.0 is the metacontainer code, the building + uploading of the metacontainers and the bugsquashing of the addon.
