@@ -19,8 +19,14 @@
 import sys,os
 import time,re
 import urllib,urllib2,cookielib,base64
-import xbmc,xbmcplugin,xbmcgui,xbmcaddon
 import unicodedata
+
+#necessary so that the metacontainers.py can use the scrapers
+try: import xbmc,xbmcplugin,xbmcgui,xbmcaddon
+except:
+     xbmc_imported = False
+else:
+     xbmc_imported = True
 
 #get path to me
 icepath=os.getcwd()
@@ -30,7 +36,7 @@ sys.path.append( os.path.join( icepath, 'resources', 'lib' ) )
 
 #imports of things bundled in the addon
 import container_urls,clean_dirs,htmlcleaner,megaroutines
-from metautils import metahandlers
+from metautils import metahandlers, metacontainers
 from cleaners import *
 from xgoogle.BeautifulSoup import BeautifulSoup,BeautifulStoneSoup
 from xgoogle.search import GoogleSearch
@@ -332,24 +338,19 @@ def Zip_DL_and_Install(url,dbtype,installtype):
                     print 'zip already downloaded, attempting extraction'
 
                print '!!!!handling meta install!!!!'
-               mc=metahandlers.MetaContainer()
-               install=mc.Install_Icefilms_Container(translatedicedatapath,filepath,dbtype,installtype)
+               install=metacontainers.Install_Icefilms_Container(translatedicedatapath,filepath,dbtype,installtype)
                return install
 
 
 def Startup_Routines(selfAddon):
      
      # avoid error on first run if no paths exists, by creating paths
-     if not os.path.exists(translatedicedatapath):
-          os.makedirs(translatedicedatapath)
-     if not os.path.exists(transmetapath):
-          os.makedirs(transmetapath)
-     if not os.path.exists(transdowninfopath):
-          os.makedirs(transdowninfopath)
+     if not os.path.exists(translatedicedatapath): os.makedirs(translatedicedatapath)
+     if not os.path.exists(transmetapath): os.makedirs(transmetapath)
+     if not os.path.exists(transdowninfopath): os.makedirs(transdowninfopath)
 
      dlzips=os.path.join(translatedicedatapath,'downloaded meta zips')
-     if not os.path.exists(dlzips):
-          os.makedirs(dlzips)
+     if not os.path.exists(dlzips): os.makedirs(dlzips)
           
      #force refresh addon repositories, to check for updates.
      #xbmc.executebuiltin('UpdateAddonRepos')
@@ -362,8 +363,7 @@ def Startup_Routines(selfAddon):
 
      # Run the container checking startup routines, if enable meta is set to true
      EnableMeta = selfAddon.getSetting('use-meta')
-     if EnableMeta=='true':
-          ContainerStartup(selfAddon)
+     if EnableMeta=='true': ContainerStartup(selfAddon)
 
 def CATEGORIES():  #  (homescreen of addon)
           #get settings
@@ -831,26 +831,46 @@ def Thriller(url):
 def MOVIEA2ZDirectories(url):
         setmode = '2'
         caturl = iceurl+'movies/a-z/'
-
-        #Add number directory
-        addDir ('#1234',caturl+'1',setmode,os.path.join(art,'letters','1.png'))
-
+        
         #Generate A-Z list and add directories for all letters.
         A2Z=[chr(i) for i in xrange(ord('A'), ord('Z')+1)]
-        for theletter in A2Z:
-             addDir (theletter,caturl+theletter,setmode,os.path.join(art,'letters',theletter+'.png'))
+
+        if xbmc_imported:
+             #Add number directory
+             addDir ('#1234',caturl+'1',setmode,os.path.join(art,'letters','1.png'))
+             for theletter in A2Z:
+                  addDir (theletter,caturl+theletter,setmode,os.path.join(art,'letters',theletter+'.png'))
+        else:
+             print '### GETTING MOVIE METADATA FOR ALL *MUSIC* ENTRIES'
+             MOVIEINDEX(iceurl+'music/a-z/1')
+             print '### GETTING MOVIE METADATA FOR ALL *STANDUP* ENTRIES'
+             MOVIEINDEX(iceurl+'standup/a-z/1')
+             print '### GETTING MOVIE METADATA FOR ALL *OTHER* ENTRIES'
+             MOVIEINDEX(iceurl+'other/a-z/1')
+             print '### GETTING MOVIE METADATA FOR ALL ENTRIES ON: '+'1'
+             MOVIEINDEX(caturl+'1')
+             for theletter in A2Z:
+                  print '### GETTING MOVIE METADATA FOR ALL ENTRIES ON: '+theletter
+                  MOVIEINDEX(caturl+theletter)
 
 def TVA2ZDirectories(url):
         setmode = '11'
         caturl = iceurl+'tv/a-z/'
 
-        #Add number directory
-        addDir ('#1234',caturl+'1',setmode,os.path.join(art,'letters','1.png'))
-
         #Generate A-Z list and add directories for all letters.
         A2Z=[chr(i) for i in xrange(ord('A'), ord('Z')+1)]
-        for theletter in A2Z:
-             addDir (theletter,caturl+theletter,setmode,os.path.join(art,'letters',theletter+'.png'))
+
+        if xbmc_imported:
+            #Add number directory
+            addDir ('#1234',caturl+'1',setmode,os.path.join(art,'letters','1.png'))
+            for theletter in A2Z:
+                 addDir (theletter,caturl+theletter,setmode,os.path.join(art,'letters',theletter+'.png'))
+        else:
+            print '### GETTING TV METADATA FOR ALL ENTRIES ON: '+'1'
+            TVINDEX(caturl+'1')
+            for theletter in A2Z:
+                 print '### GETTING TV METADATA FOR ALL ENTRIES ON: '+theletter
+                 TVINDEX(caturl+theletter)
 
 def MOVIEINDEX(url):
     #Indexer for most things. (Movies,Music,Stand-up etc) 
@@ -1787,139 +1807,140 @@ def addExecute(name,url,mode,iconimage):
 
 
 def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=False, total=False, disablefav=False, searchMode=False):
-    meta = metainfo
-    
-    ###  addDir with context menus and meta support  ###
+    if xbmc_imported:
+         meta = metainfo
+         
+         ###  addDir with context menus and meta support  ###
 
-    #encode url and name, so they can pass through the sys.argv[0] related strings
-    sysname = urllib.quote_plus(name)
-    sysurl = urllib.quote_plus(url)
-    dirmode=mode
-    
-    #get nice unicode name text.
-    #name has to pass through lots of weird operations earlier in the script,
-    #so it should only be unicodified just before it is displayed.
-    name = htmlcleaner.clean(name)
-    
-    if mode == 12 or mode == 13:
-        u = sys.argv[0] + "?url=" + sysurl + "&mode=" + str(mode) + "&name=" + sysname + "&imdbnum=" + urllib.quote_plus(str(imdb))
-    else:
-        u = sys.argv[0] + "?url=" + sysurl + "&mode=" + str(mode) + "&name=" + sysname
-    ok = True
-    
-    if meta is not False:
-        print str(meta)
-    #handle adding context menus
-    contextMenuItems = []
-    
-    #handle adding meta
-    if meta == False:
-        liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
-        liz.setInfo(type="Video", infoLabels={"Title": name})
+         #encode url and name, so they can pass through the sys.argv[0] related strings
+         sysname = urllib.quote_plus(name)
+         sysurl = urllib.quote_plus(url)
+         dirmode=mode
+         
+         #get nice unicode name text.
+         #name has to pass through lots of weird operations earlier in the script,
+         #so it should only be unicodified just before it is displayed.
+         name = htmlcleaner.clean(name)
+         
+         if mode == 12 or mode == 13:
+             u = sys.argv[0] + "?url=" + sysurl + "&mode=" + str(mode) + "&name=" + sysname + "&imdbnum=" + urllib.quote_plus(str(imdb))
+         else:
+             u = sys.argv[0] + "?url=" + sysurl + "&mode=" + str(mode) + "&name=" + sysname
+         ok = True
+         
+         if meta is not False:
+             print str(meta)
+         #handle adding context menus
+         contextMenuItems = []
+         
+         #handle adding meta
+         if meta == False:
+             liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
+             liz.setInfo(type="Video", infoLabels={"Title": name})
 
-    else:
-        
-        if meta.has_key('watched') == False :
-            meta['watched']=6 
-        liz = xbmcgui.ListItem(name, iconImage=str(meta['cover_url']), thumbnailImage=str(meta['cover_url']))
-        
-        infoLabels = {}
-        infoLabels['title'] = name
-        infoLabels['plot'] = cleanUnicode(meta['plot']) # to-check if we need cleanUnicode
-        infoLabels['genre'] = str(meta['genres'])
-        infoLabels['duration'] = str(meta['duration'])
-        infoLabels['premiered'] = str(meta['premiered'])
-        infoLabels['studio'] = meta['studios']
-        infoLabels['mpaa'] = str(meta['mpaa'])
-        infoLabels['code'] = str(meta['imdb_id'])
-        infoLabels['rating'] = float(meta['rating'])
-        infoLabels['overlay'] = meta['watched'] # watched 7, unwatched 6
-        
-        try:
-                trailer_id = re.match('^[^v]+v=(.{11}).*', meta['trailer_url']).group(1)
-                infoLabels['trailer'] = "plugin://plugin.video.youtube/?action=play_video&videoid=%s" % trailer_id
-        except:
-                infoLabels['trailer'] = ''
-        
-        if meta.has_key('season_num'):
-            infoLabels['Episode'] = int(meta['episode_num'])
-            infoLabels['Season'] =int(meta['season_num'])
-            print 'No refresh for episodes yet'
-        elif searchMode==False:
-            #print 'Mode is ' + str(mode) + ' argv is ' + str(sys.argv[1]) + ' name is ' + sysname
-            contextMenuItems.append(('Refresh Info', 'XBMC.RunPlugin(%s?mode=999&name=%s&url=%s&imdbnum=%s&dirmode=%s)' % (sys.argv[0], sysname, sysurl, urllib.quote_plus(str(imdb)), dirmode)))
-            contextMenuItems.append(('Search for trailer', 
-                                     'XBMC.RunPlugin(%s?mode=998&name=%s&url=%s&dirmode=%s&imdbnum=%s)' 
-                                     % (sys.argv[0], sysname, sysurl, dirmode, urllib.quote_plus(str(imdb))) ))
-            #if str(meta['trailer_url']) != 'None' and str(meta['trailer_url']) != '':
-                #print 'Trailer link -------  ' + 'plugin://plugin.video.youtube/?action=play_video&videoid=%s' % str(meta['trailer_url'])[str(meta['trailer_url']).rfind("v=")+2:] #str(meta['trailer_url'])
-                #contextMenuItems.append(('Play Trailer', 'XBMC.PlayMedia(plugin://plugin.video.youtube/?action=play_video&videoid=%s)' % str(meta['trailer_url'])[str(meta['trailer_url']).rfind("v=")+2:]))
-        
-        # mark as watched or unwatched 
-        addWatched = False
-        videoType = ''
-        season=''
-        if mode == 12: # TV series
-            addWatched = True
-            videoType = 'tvshow'
-            if searchMode == False:
-                contextMenuItems.append(('Show Information', 'XBMC.Action(Info)'))
-        elif meta.has_key('season_num'): # episode
-            addWatched = True
-            videoType = 'episode'
-            season = meta['season']
-            if searchMode == False:
-                contextMenuItems.append(('Episode Information', 'XBMC.Action(Info)'))
-        elif mode == 100: # movies
-            addWatched = True
-            videoType = 'movie'
-            if searchMode == False:
-                contextMenuItems.append(('Movie Information', 'XBMC.Action(Info)'))
-        if addWatched:
-            if meta['watched'] == 6:
-                watchedMenu='Mark as Watched'
-            else:
-                watchedMenu='Mark as Unwatched'
-            if searchMode==False:
-                contextMenuItems.append((watchedMenu, 'XBMC.RunPlugin(%s?mode=990&name=%s&url=%s&imdbnum=%s&videoType=%s&season=%s)' 
-                    % (sys.argv[0], sysname, sysurl, urllib.quote_plus(str(imdb)), videoType, urllib.quote_plus(season))))
-        
-        liz.setInfo(type="Video", infoLabels=infoLabels)
-    
-    # add/delete favourite
-    if disablefav is False: # disable fav is necessary for the scrapes in the homepage category.
-        if delfromfav is True:
-            #settings for when in the Favourites folder
-            contextMenuItems.append(('Delete from Ice Favourites', 'XBMC.RunPlugin(%s?mode=111&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
-        else:
-            #if directory is an episode list or movie
-            if mode == 100 or mode == 12:
-                if imdb is not False:
-                    sysimdb = urllib.quote_plus(str(imdb))
-                else:
-                    #if no imdb number, it will have no metadata in Favourites
-                    sysimdb = urllib.quote_plus('nothing')
-                if searchMode==False:
-                    contextMenuItems.append(('Add to Ice Favourites', 'XBMC.RunPlugin(%s?mode=110&name=%s&url=%s&imdbnum=%s)' % (sys.argv[0], sysname, sysurl, sysimdb)))
+         else:
+             
+             if meta.has_key('watched') == False :
+                 meta['watched']=6 
+             liz = xbmcgui.ListItem(name, iconImage=str(meta['cover_url']), thumbnailImage=str(meta['cover_url']))
+             
+             infoLabels = {}
+             infoLabels['title'] = name
+             infoLabels['plot'] = cleanUnicode(meta['plot']) # to-check if we need cleanUnicode
+             infoLabels['genre'] = str(meta['genres'])
+             infoLabels['duration'] = str(meta['duration'])
+             infoLabels['premiered'] = str(meta['premiered'])
+             infoLabels['studio'] = meta['studios']
+             infoLabels['mpaa'] = str(meta['mpaa'])
+             infoLabels['code'] = str(meta['imdb_id'])
+             infoLabels['rating'] = float(meta['rating'])
+             infoLabels['overlay'] = meta['watched'] # watched 7, unwatched 6
+             
+             try:
+                     trailer_id = re.match('^[^v]+v=(.{11}).*', meta['trailer_url']).group(1)
+                     infoLabels['trailer'] = "plugin://plugin.video.youtube/?action=play_video&videoid=%s" % trailer_id
+             except:
+                     infoLabels['trailer'] = ''
+             
+             if meta.has_key('season_num'):
+                 infoLabels['Episode'] = int(meta['episode_num'])
+                 infoLabels['Season'] =int(meta['season_num'])
+                 print 'No refresh for episodes yet'
+             elif searchMode==False:
+                 #print 'Mode is ' + str(mode) + ' argv is ' + str(sys.argv[1]) + ' name is ' + sysname
+                 contextMenuItems.append(('Refresh Info', 'XBMC.RunPlugin(%s?mode=999&name=%s&url=%s&imdbnum=%s&dirmode=%s)' % (sys.argv[0], sysname, sysurl, urllib.quote_plus(str(imdb)), dirmode)))
+                 contextMenuItems.append(('Search for trailer', 
+                                          'XBMC.RunPlugin(%s?mode=998&name=%s&url=%s&dirmode=%s&imdbnum=%s)' 
+                                          % (sys.argv[0], sysname, sysurl, dirmode, urllib.quote_plus(str(imdb))) ))
+                 #if str(meta['trailer_url']) != 'None' and str(meta['trailer_url']) != '':
+                     #print 'Trailer link -------  ' + 'plugin://plugin.video.youtube/?action=play_video&videoid=%s' % str(meta['trailer_url'])[str(meta['trailer_url']).rfind("v=")+2:] #str(meta['trailer_url'])
+                     #contextMenuItems.append(('Play Trailer', 'XBMC.PlayMedia(plugin://plugin.video.youtube/?action=play_video&videoid=%s)' % str(meta['trailer_url'])[str(meta['trailer_url']).rfind("v=")+2:]))
+             
+             # mark as watched or unwatched 
+             addWatched = False
+             videoType = ''
+             season=''
+             if mode == 12: # TV series
+                 addWatched = True
+                 videoType = 'tvshow'
+                 if searchMode == False:
+                     contextMenuItems.append(('Show Information', 'XBMC.Action(Info)'))
+             elif meta.has_key('season_num'): # episode
+                 addWatched = True
+                 videoType = 'episode'
+                 season = meta['season']
+                 if searchMode == False:
+                     contextMenuItems.append(('Episode Information', 'XBMC.Action(Info)'))
+             elif mode == 100: # movies
+                 addWatched = True
+                 videoType = 'movie'
+                 if searchMode == False:
+                     contextMenuItems.append(('Movie Information', 'XBMC.Action(Info)'))
+             if addWatched:
+                 if meta['watched'] == 6:
+                     watchedMenu='Mark as Watched'
+                 else:
+                     watchedMenu='Mark as Unwatched'
+                 if searchMode==False:
+                     contextMenuItems.append((watchedMenu, 'XBMC.RunPlugin(%s?mode=990&name=%s&url=%s&imdbnum=%s&videoType=%s&season=%s)' 
+                         % (sys.argv[0], sysname, sysurl, urllib.quote_plus(str(imdb)), videoType, urllib.quote_plus(season))))
+             
+             liz.setInfo(type="Video", infoLabels=infoLabels)
+         
+         # add/delete favourite
+         if disablefav is False: # disable fav is necessary for the scrapes in the homepage category.
+             if delfromfav is True:
+                 #settings for when in the Favourites folder
+                 contextMenuItems.append(('Delete from Ice Favourites', 'XBMC.RunPlugin(%s?mode=111&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
+             else:
+                 #if directory is an episode list or movie
+                 if mode == 100 or mode == 12:
+                     if imdb is not False:
+                         sysimdb = urllib.quote_plus(str(imdb))
+                     else:
+                         #if no imdb number, it will have no metadata in Favourites
+                         sysimdb = urllib.quote_plus('nothing')
+                     if searchMode==False:
+                         contextMenuItems.append(('Add to Ice Favourites', 'XBMC.RunPlugin(%s?mode=110&name=%s&url=%s&imdbnum=%s)' % (sys.argv[0], sysname, sysurl, sysimdb)))
 
-    # switch on/off library mode (have it appear in list after favourite options)
-    if inLibraryMode():
-        contextMenuItems.append(('Switch off Library mode', 'XBMC.RunPlugin(%s?mode=300)' % (sys.argv[0])))
-    else:
-        contextMenuItems.append(('Switch to Library Mode', 'XBMC.RunPlugin(%s?mode=300)' % (sys.argv[0])))
-        
-    if contextMenuItems:
-        #print str(contextMenuItems)
-        liz.addContextMenuItems(contextMenuItems, replaceItems=True)
-    #########
+         # switch on/off library mode (have it appear in list after favourite options)
+         if inLibraryMode():
+             contextMenuItems.append(('Switch off Library mode', 'XBMC.RunPlugin(%s?mode=300)' % (sys.argv[0])))
+         else:
+             contextMenuItems.append(('Switch to Library Mode', 'XBMC.RunPlugin(%s?mode=300)' % (sys.argv[0])))
+             
+         if contextMenuItems:
+             #print str(contextMenuItems)
+             liz.addContextMenuItems(contextMenuItems, replaceItems=True)
+         #########
 
-    print '          Mode=' + str(mode) + ' URL=' + str(url)
-    #Do some crucial stuff
-    if total is False:
-        ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
-    else:
-        ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True, totalItems=int(total))
-    return ok
+         print '          Mode=' + str(mode) + ' URL=' + str(url)
+         #Do some crucial stuff
+         if total is False:
+             ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
+         else:
+             ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True, totalItems=int(total))
+         return ok
      
 
 #VANILLA ADDDIR (kept for reference)
@@ -2077,7 +2098,7 @@ def getMeta(scrape, mode):
     elif use_meta==True and meta_setting=='true':
     
         #initialise meta class before loop
-        metaget=metahandlers.MetaData(translatedicedatapath)
+        metaget=metahandlers.MetaData(metapath,preparezip = xbmc_imported)
 
         #determine whether to show number of eps
         if scrape[3] and show_num_of_eps == 'true' and mode == 12:

@@ -10,7 +10,7 @@
 	<setting id="hide-2shared" type="bool" label="30105" default="true"/>
 	<setting id="stack-multi-part" type="bool" label="30106" default="true" visible="false"/>
         
-	<setting id="display-show-eps" type="bool" label="30107" default="true"/>
+	<setting id="display-show-eps" type="bool" label="30107" default="false" visible="false"/>
    </category>
    <category label="Megaupload">
 	<setting id="megaupload-account" type="bool" label="30200" default="false"/>
