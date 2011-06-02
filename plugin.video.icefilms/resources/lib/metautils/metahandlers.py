@@ -26,6 +26,7 @@ import re
 import sys
 import urllib
 import urllib2
+import base64
 
 #append lib directory
 sys.path.append((os.path.split(os.getcwd()))[0])
@@ -219,21 +220,21 @@ class MetaData:
 
             #if cache row says there are pre-packed images...
             if meta['imgs_prepacked'] == 'true':
-                    encoded_name = base64.(meta['name'])
+                    encoded_name = base64.b64encode(meta['name'])
 
                     #define the image paths
-                    cover_path=os.path.join(self.mvcovers,,self._picname(meta['cover_url']))
+                    cover_path = os.path.join(self.mvcovers, imdb_id, self._picname(meta['cover_url']))
                     #backdrop_path=os.path.join(self.mvbackdrops,imdb_id,self._picname(meta['backdrop_url']))
 
                     #if paths exist, replace the urls with paths
-                    if self.classmode is 'false':              
+                    if self.classmode is 'false':
                         if os.path.exists(cover_path):
                             meta['cover_url'] = cover_path
                         #if os.path.exists(backdrop_path):
                         #    meta['backdrop_url'] = backdrop_path
-                        
+
                     #try some image redownloads if building container
-                    elif self.classmode is 'true':                                              
+                    elif self.classmode is 'true':
                         if not os.path.exists(cover_path):
                                 self._downloadimages(meta,'movies',imdb_id)
 
