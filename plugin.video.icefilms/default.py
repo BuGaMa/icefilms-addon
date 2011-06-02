@@ -1108,11 +1108,8 @@ def check_for_captcha(source):
 
 def RECAPTCHA(url):
      print 'initiating recaptcha passthrough'
-     req = urllib2.Request(url)
-     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')       
-     response = urllib2.urlopen(req)
-     link=response.read()
-     match=re.compile('<iframe src="http://www.google.com/recaptcha/api/noscript\?k\=(.+?)" height').findall(link)
+     source = GetURL(url)
+     match = re.compile('<iframe src="http://www.google.com/recaptcha/api/noscript\?k\=(.+?)" height').findall(source)
      for token in match:
           surl = 'http://www.google.com/recaptcha/api/challenge?k=' + token
      tokenlink=GetURL(surl)
@@ -1423,9 +1420,9 @@ def GetURL(url):
      # http://forum.xbmc.org/showpost.php?p=810288&postcount=1146
      req.add_header('Referer', 'http://www.icefilms.info')
      response = urllib2.urlopen(req)
-     link=response.read()
+     source = response.read()
      response.close()
-     return link
+     return source
 
 
 def WaitIf():
