@@ -112,7 +112,7 @@ class megaupload:
      #loads page source code. redirect url is returned if Direct Downloads is enabled.
         
      urltype=checkurl(url)
-     if urltype is 'megaup' or 'megaporn':
+     if urltype == 'megaup' or urltype == 'megaporn':
           link=GetURL(url,self,disable_cookies)
           return link
      else:
@@ -324,7 +324,7 @@ def GetURL(url,self=False,disable_cookies=False):
      #logic to designate whether to handle cookies
      urltype=checkurl(url)
      if disable_cookies==False:
-          if urltype is 'megaup' or 'megaporn' or 'megavid':
+          if urltype == 'megaup' or urltype == 'megaporn' or urltype == 'megavid':
                if self is not False:
                     if os.path.exists(self.cookie):
                          use_cookie=True

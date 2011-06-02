@@ -213,7 +213,7 @@ class MetaData:
             self._cache_save_movie_meta(meta, type)
 
             #if creating a metadata container, download the images.
-            if self.classmode is 'true':
+            if self.classmode == 'true':
                 self._downloadimages(meta,'movies',imdb_id)
 
         if meta:
@@ -227,14 +227,14 @@ class MetaData:
                     #backdrop_path=os.path.join(self.mvbackdrops,imdb_id,self._picname(meta['backdrop_url']))
 
                     #if paths exist, replace the urls with paths
-                    if self.classmode is 'false':
+                    if self.classmode == 'false':
                         if os.path.exists(cover_path):
                             meta['cover_url'] = cover_path
                         #if os.path.exists(backdrop_path):
                         #    meta['backdrop_url'] = backdrop_path
 
                     #try some image redownloads if building container
-                    elif self.classmode is 'true':
+                    elif self.classmode == 'true':
                         if not os.path.exists(cover_path):
                                 self._downloadimages(meta,'movies',imdb_id)
 
@@ -901,7 +901,7 @@ class MetaData:
             self._cache_save_movie_meta(meta)
 
             #if creating a metadata container, download the images.
-            if self.classmode is 'true':
+            if self.classmode == 'true':
                 self._downloadimages(meta,'movies',imdb_id)
 
         if meta is not None:
@@ -914,14 +914,14 @@ class MetaData:
                     #backdrop_path=os.path.join(self.mvbackdrops,imdb_id,self._picname(meta['backdrop_url']))
 
                     #if paths exist, replace the urls with paths
-                    if self.classmode is 'false':              
+                    if self.classmode == 'false':
                         if os.path.exists(cover_path):
                             meta['cover_url'] = cover_path
                         #if os.path.exists(backdrop_path):
                         #    meta['backdrop_url'] = backdrop_path
-                        
+
                     #try some image redownloads if building container
-                    elif self.classmode is 'true':                                              
+                    elif self.classmode == 'true':
                         if not os.path.exists(cover_path):
                                 self._downloadimages(meta,'movies',imdb_id)
 
