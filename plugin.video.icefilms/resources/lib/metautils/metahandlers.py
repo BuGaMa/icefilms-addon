@@ -113,7 +113,7 @@ class MetaData:
     def _downloadimages(self,meta,mediatype,name):
           
           if mediatype=='movies':
-               cover_folder=os.path.join(self.mvcovers,imdb_id)
+               cover_folder=os.path.join(self.mvcovers,name)
 
                if not os.path.exists(cover_folder):
                    os.makedirs(cover_folder)

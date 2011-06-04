@@ -28,6 +28,10 @@ except:
 else:
      xbmc_imported = True
 
+# global constants
+USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
+ICEFILMS_REFERRER = 'http://www.icefilms.info'
+
 #get path to me
 icepath=os.getcwd()
 
@@ -1092,10 +1096,10 @@ def LOADMIRRORS(url):
      #check for recaptcha
      has_recaptcha = check_for_captcha(mlink)
 
-     if has_recaptcha is False:
-          GETMIRRORS(mirrorpageurl,mlink)
-     elif has_recaptcha is True:
+     if has_recaptcha:
           RECAPTCHA(mirrorpageurl)
+     else:
+          GETMIRRORS(mirrorpageurl,mlink)
 
 def check_for_captcha(source):
      #check for recaptcha in the page source, and return true or false.
@@ -1103,7 +1107,7 @@ def check_for_captcha(source):
 
      if has_recaptcha is None:
           return False
-     elif has_recaptcha is not None:
+     else:
           return True
 
 def RECAPTCHA(url):
@@ -1127,8 +1131,7 @@ def RECAPTCHA(url):
      #addDir uses imageurl as url, to avoid xbmc displaying old cached image as the fresh captcha
      addDir('Enter Captcha - Type the letters',imageurl,99,imageurl)
 
-def CATPCHAENTER(surl):
-     
+def CAPTCHAENTER(surl):
      url=handle_file('pageurl','open')
      kb = xbmc.Keyboard('', 'Type the letters in the captcha image', False)
      kb.doModal()
@@ -1138,14 +1141,12 @@ def CATPCHAENTER(surl):
                challengeToken=handle_file('captcha','open')
                print 'challenge token: '+challengeToken
                parameters = urllib.urlencode({'recaptcha_challenge_field': challengeToken, 'recaptcha_response_field': userInput})
-               resp = urllib.urlopen(url, parameters)
-               link=resp.read() 
-               resp.close()
-               has_recaptcha = check_for_captcha(link)
-               if has_recaptcha is False:
-                    GETMIRRORS(url,link)
-               elif has_recaptcha is True:
+               source = GetURL(url, parameters)
+               has_recaptcha = check_for_captcha(source)
+               if has_recaptcha:
                     Notify('big', 'Text does not match captcha image!', 'To try again, close this box and then: \n Press backspace twice, and reselect your video.', '')
+               else:
+                    GETMIRRORS(url,source)
           elif userInput == '':
                Notify('big', 'No text entered!', 'To try again, close this box and then: \n Press backspace twice, and reselect your video.', '')               
 
@@ -1400,7 +1401,7 @@ def SHARED2_HANDLER(url):
                print '2Shared Direct Link: '+finalurl
                return finalurl
           #req = urllib2.Request(url)
-          #req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+          #req.add_header('User-Agent', USER_AGENT)
           #req.add_header('Referer', url)
           #jar = cookielib.FileCookieJar("cookies")
           #opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(jar))
@@ -1411,19 +1412,23 @@ def SHARED2_HANDLER(url):
           #for surl in dirlink:
           #    return surl
 
-        
-def GetURL(url):
-     #print 'processing url: '+url
+def GetURL(url, params = None, referrer = ICEFILMS_REFERRER):
+     # print 'processing url: ' + url
      req = urllib2.Request(url)
-     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
-     # as of 2011-06-02, sources aren't displayed unless a valid referrer header is supplied:
+     req.add_header('User-Agent', USER_AGENT)
+     # as of 2011-06-02, IceFilms sources aren't displayed unless a valid referrer header is supplied:
      # http://forum.xbmc.org/showpost.php?p=810288&postcount=1146
-     req.add_header('Referer', 'http://www.icefilms.info')
-     response = urllib2.urlopen(req)
+     if referrer:
+         req.add_header('Referer', referrer)
+     # avoid Python >= 2.5 ternary operator for backwards compatibility
+     # http://wiki.xbmc.org/index.php?title=Python_Development#Version
+     if params:
+        response = urllib2.urlopen(req, params)
+     else:
+        response = urllib2.urlopen(req)
      source = response.read()
      response.close()
      return source
-
 
 def WaitIf():
      #killing playback is necessary if switching playing of one megaup/2share stream to another
@@ -2605,7 +2610,7 @@ elif mode==13:
 
 elif mode==99:
         print ""+url
-        CATPCHAENTER(url)
+        CAPTCHAENTER(url)
         
 elif mode==100:
         print ""+url
