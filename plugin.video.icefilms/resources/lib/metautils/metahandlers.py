@@ -597,20 +597,20 @@ class MetaData:
         # select * is easier since we return a dict but may not be efficient.
         self.dbcur.execute("SELECT * FROM tvshow_meta WHERE imdb_id = '%s'" % meta['imdb_id']) #select database row where imdb_id matches
         matchedrow = self.dbcur.fetchone()
+
         if matchedrow:
             temp = dict(matchedrow)
             meta['genres'] = temp['genres']
             meta['duration'] = temp['duration']
             meta['studios'] = temp['studios']
             meta['mpaa'] = temp['mpaa']
-            
-            return meta
         else:
             meta['genres'] = ''
             meta['duration'] = 0
             meta['studios'] = ''
             meta['mpaa'] = ''
-            return None
+
+        return meta
 
     def _get_tvdb_id(self, imdb_id):
         # select * is easier since we return a dict but may not be efficient.
