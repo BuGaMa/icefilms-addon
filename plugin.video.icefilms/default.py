@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
 #Icefilms.info v1.1.0 Draft - anarchintosh / daledude / WestCoast13 19/3/2011
+
+#All code Copyleft (GNU GPL v2) Anarchintosh and icefilms-xbmc team
+
 # Still to-do (Low/Normal/High priority): 
 #    - (N) better search results (maybe diff results for movies, tv shows & episodes) 
 #    - (N) refresh for episodes & seasons
