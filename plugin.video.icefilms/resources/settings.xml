@@ -6,6 +6,7 @@
 	<setting id="flatten-source-type" type="bool" label="30103" default="true"/>
 	<setting id="hide-2shared" type="bool" label="30105" default="true"/>
 	<setting id="stack-multi-part" type="bool" label="30106" default="true" visible="false"/>
+  <setting id="play-action" type="enum" label="30107" values="Watch Stream|Download|Download and Watch" default="Watch Stream"/>
    </category>
    <category label="Megaupload">
 	<setting id="megaupload-account" type="bool" label="30200" default="false"/>
