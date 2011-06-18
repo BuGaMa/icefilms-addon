@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#Icefilms.info v1.0.6 - anarchintosh / daledude / westcoast13 15/3/2011
+#Icefilms.info v1.0.7 - anarchintosh / daledude / westcoast13 2011-06-04
 
 # Quite convoluted code. Needs a good cleanup for v1.1.0
 
@@ -18,6 +18,9 @@ from xgoogle.search import GoogleSearch
 from mega import megaroutines
 from metautils import metahandlers
 
+# global constants
+USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
+ICEFILMS_REFERRER = 'http://www.icefilms.info'
 
 def xbmcpath(path,filename):
      translatedpath = os.path.join(xbmc.translatePath( path ), ''+filename+'')
@@ -1161,10 +1164,7 @@ def check_for_captcha(source):
 
 def RECAPTCHA(url):
      print 'initiating recaptcha passthrough'
-     req = urllib2.Request(url)
-     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')       
-     response = urllib2.urlopen(req)
-     link=response.read()
+     link=GetURL(url)
      match=re.compile('<iframe src="http://www.google.com/recaptcha/api/noscript\?k\=(.+?)" height').findall(link)
      for token in match:
           surl = 'http://www.google.com/recaptcha/api/challenge?k=' + token
@@ -1194,9 +1194,7 @@ def CATPCHAENTER(surl):
                challengeToken=handle_file('captcha','open')
                print 'challenge token: '+challengeToken
                parameters = urllib.urlencode({'recaptcha_challenge_field': challengeToken, 'recaptcha_response_field': userInput})
-               resp = urllib.urlopen(url, parameters)
-               link=resp.read() 
-               resp.close()
+               link=GetURL(url, parameters)
                has_recaptcha = check_for_captcha(link)
                if has_recaptcha is False:
                     GETMIRRORS(url,link)
@@ -1446,7 +1444,7 @@ def SHARED2_HANDLER(url):
                print '2Shared Direct Link: '+finalurl
                return finalurl
           #req = urllib2.Request(url)
-          #req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+          #req.add_header('User-Agent', USER_AGENT)
           #req.add_header('Referer', url)
           #jar = cookielib.FileCookieJar("cookies")
           #opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(jar))
@@ -1457,16 +1455,23 @@ def SHARED2_HANDLER(url):
           #for surl in dirlink:
           #    return surl
 
-        
-def GetURL(url):
-     #print 'processing url: '+url
+def GetURL(url, params = None, referrer = ICEFILMS_REFERRER):
+     # print 'processing url: ' + url
      req = urllib2.Request(url)
-     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')       
-     response = urllib2.urlopen(req)
-     link=response.read()
+     req.add_header('User-Agent', USER_AGENT)
+     # as of 2011-06-02, IceFilms sources aren't displayed unless a valid referrer header is supplied:
+     # http://forum.xbmc.org/showpost.php?p=810288&postcount=1146
+     if referrer:
+         req.add_header('Referer', referrer)
+     # avoid Python >= 2.5 ternary operator for backwards compatibility
+     # http://wiki.xbmc.org/index.php?title=Python_Development#Version
+     if params:
+        response = urllib2.urlopen(req, params)
+     else:
+        response = urllib2.urlopen(req)
+     source = response.read()
      response.close()
-     return link
-
+     return source
 
 def WaitIf():
      #killing playback is necessary if switching playing of one megaup/2share stream to another
@@ -1853,7 +1858,7 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
                 
         if delfromfav is True:
             #settings for when in the Favourites folder
-            contextMenuItems.append(('Delete from Ice Favourites', 'XBMC.RunPlugin(%s?mode=111&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
+            contextMenuItems.append(('Delete from Ice Favourites', u'XBMC.RunPlugin(%s?mode=111&name=%s&url=%s)' % (sys.argv[0], sysname, sysurl)))
         else:
             #if directory is an episode list or movie
             if mode == 100 or mode == 12:
@@ -1864,13 +1869,13 @@ def addDir(name, url, mode, iconimage, metainfo=False, imdb=False, delfromfav=Fa
                     #if no imdb number, it will have no metadata in Favourites
                     sysimdb = urllib.quote_plus('nothing')
 
-                contextMenuItems.append(('Add to Ice Favourites', 'XBMC.RunPlugin(%s?mode=110&name=%s&url=%s&imdbnum=%s)' % (sys.argv[0], sysname, sysurl, sysimdb)))
+                contextMenuItems.append(('Add to Ice Favourites', u'XBMC.RunPlugin(%s?mode=110&name=%s&url=%s&imdbnum=%s)' % (sys.argv[0], sysname, sysurl, sysimdb)))
 
     # switch on/off library mode (have it appear in list after favourite options)
     if inLibraryMode():
-        contextMenuItems.append(('Switch off Library mode', 'XBMC.RunPlugin(%s?mode=300)' % (sys.argv[0])))
+        contextMenuItems.append(('Switch off Library mode', u'XBMC.RunPlugin(%s?mode=300)' % (sys.argv[0])))
     else:
-        contextMenuItems.append(('Switch to Library Mode', 'XBMC.RunPlugin(%s?mode=300)' % (sys.argv[0])))
+        contextMenuItems.append(('Switch to Library Mode', u'XBMC.RunPlugin(%s?mode=300)' % (sys.argv[0])))
         
     if contextMenuItems:
         liz.addContextMenuItems(contextMenuItems, replaceItems=True)

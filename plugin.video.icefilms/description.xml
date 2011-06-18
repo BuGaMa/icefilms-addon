@@ -23,7 +23,7 @@
     <title>Icefilms</title>
 
     <!-- (required) Major.minor.build -->
-    <version>1.0.6</version>
+    <version>1.0.7</version>
 
     <!-- (required) author name & email.  at least one author name is required -->
     <authors>
